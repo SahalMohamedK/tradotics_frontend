@@ -1,0 +1,141 @@
+@config "../tailwind.config.cjs";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------- start: Scroll Bar ---------- */
+::-webkit-scrollbar {
+    width: 15px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+    
+}
+
+::-webkit-scrollbar-thumb {
+    box-shadow: inset 0 0 10px 10px #334155;
+    border: solid 4px transparent;
+    border-radius: 30px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    box-shadow: inset 0 0 10px 10px #64748b;
+}
+/* ---------- end: Scroll Bar ---------- */
+
+/* ---------- start: Tags ---------- */
+body{
+    @apply bg-primary-900 text-secondary-300;
+    background-image: url('./media/bg.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+/* ---------- end: Tags ---------- */
+
+/* ---------- start: Classes ---------- */
+input[type="date"]::-webkit-inner-spin-button,
+input[type="date"]::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
+}
+
+.input-field{
+    @apply bg-primary-900 border-0 p-1 rounded-md focus:ring-indigo-500
+}
+
+.primary-btn{
+    box-shadow: inset 0 1px 0 0 hsl(0deg 0% 100% / 40%), inset 0 -1px 0 0 rgba(0, 0, 0, 0.4);
+    @apply whitespace-nowrap flex items-center justify-center cursor-pointer duration-200 bg-indigo-500 text-white px-4 py-1.5 text-sm rounded-lg active:bg-indigo-900 hover:bg-indigo-700
+}
+
+.secondary-btn{
+    box-shadow: inset 0 1px 0 0 hsl(0deg 0% 100% / 10%);
+    @apply whitespace-nowrap flex items-center justify-center cursor-pointer duration-200 bg-secondary-800 text-white px-4 py-1.5 text-sm rounded-lg active:bg-indigo-900 hover:bg-indigo-700
+}
+
+.primary-btn:disabled{
+    box-shadow: inset 0 1px 0 0 hsl(0deg 0% 100% / 40%), inset 0 -1px 0 0 rgba(0, 0, 0, 0.4);
+    @apply whitespace-nowrap flex items-center justify-center duration-200 bg-indigo-900 text-indigo-300 px-4 py-1.5 text-sm rounded-lg
+}
+
+.btn-secondary-700{
+    @apply whitespace-nowrap flex items-center justify-center cursor-pointer duration-200 bg-secondary-700 text-white px-4 py-1.5 text-sm rounded-lg active:bg-indigo-900 hover:bg-indigo-700
+}
+
+.checkbox{
+    @apply !ring-offset-0 h-4 w-4 rounded bg-secondary-900 border-0 focus:outline-none;
+}
+
+.dir-rtl{
+    direction: rtl;
+}
+
+.slider-green .progress, 
+.slider-green .range::-webkit-slider-thumb{
+    @apply bg-green-500 accent-green-500;
+}
+
+.slider-red .progress,
+.slider-red .range::-webkit-slider-thumb {
+    @apply bg-red-500;
+}
+
+.circle{
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    position: relative;
+}
+
+.center{
+    @apply absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2;
+}
+
+.v-center{
+    @apply absolute top-1/2 -translate-y-1/2;
+}
+
+.h-center {
+    @apply absolute left-1/2 -translate-x-1/2;
+}
+
+.card{
+    box-shadow: inset 0 1px 0 0 hsla(231, 29%, 30%, 0.5),
+                inset 0 0 0 1px hsla(231, 61%, 13%, 0.5), 
+                inset 0 -1px 0 0 rgb(6 8 24 / 0.75), 
+                0 10px 15px -3px rgb(6 8 24 / 0.5), 
+                0 4px 6px -4px rgb(6 8 24 / 0.5);
+    @apply bg-primary-900/60 backdrop-blur-sm rounded-lg py-3 px-4 h-full
+}
+
+.material {
+    box-shadow: inset 0 1px 0 0 hsl(0deg 0% 100% / 7%);
+}
+
+.secondary-material {
+    box-shadow: inset 0 1px 0 0 hsl(0deg 0% 100% / 7%), inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+.primary-material{
+    box-shadow: inset 0 1px 0 0 hsl(0deg 0% 100% / 40%), inset 0 -1px 0 0 rgba(0,0,0,0.4);
+    @apply bg-gradient-to-tr from-indigo-700 to-indigo-400 text-white;
+}
+
+.active-primary-material{
+    box-shadow: inset 0 1px 0 0 hsl(0deg 0% 100% / 40%), inset 0 -1px 0 0 rgba(0, 0, 0, 0.2), 0 20px 25px -5px rgba(129, 140, 248, 0.2), 0 8px 10px -6px rgba(129, 140, 248, 0.2);
+    @apply bg-gradient-to-tr from-indigo-700 to-indigo-400 text-white;
+}
+
+.green-material{
+    box-shadow: inset 0 1px 0 0 hsl(0deg 0% 100% / 40%), inset 0 -1px 0 0 rgba(0, 0, 0, 0.4);
+    @apply bg-gradient-to-tr from-green-900 to-green-600
+}
+
+.red-material{
+    box-shadow: inset 0 1px 0 0 hsl(0deg 0% 100% / 40%), inset 0 -1px 0 0 rgba(0, 0, 0, 0.4);
+    @apply bg-gradient-to-tr from-red-900 to-red-600
+}
+
+/* ---------- end: Classes ---------- */
