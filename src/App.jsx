@@ -15,7 +15,7 @@ import Dashboard from './pages/Dashboard';
 import ChartViews from './pages/ChartViews';
 import TradeAnalytics from './pages/TradeAnalytics';
 import UIProvider from './contexts/UIContext';
-import AuthProvider from './contexts/AuthContext';
+import APIProvider from './contexts/APIContext';
 import CalendarViews from './pages/CalendarViews';
 import InstitutePage1 from './pages/InstitutePage1';
 import DetailedReport from './pages/DetailedReport';
@@ -24,6 +24,7 @@ import InstituteDashboard from './pages/InstituteDashboard';
 import { Chart, registerables } from 'chart.js';
 import {BrowserRouter as Router, Routes, Route} from 'react-router-dom'
 import EarlyAccess from './pages/EarlyAccess';
+import Page404 from './pages/Page404';
 
 Chart.register(...registerables);
 
@@ -42,7 +43,7 @@ function App() {
   return (
     <div>
       <UIProvider>
-        <AuthProvider>
+        <APIProvider>
           <Router>
               <Routes>
                 <Route path='/dashboard' element={<Wrapper><Dashboard /></Wrapper>} />
@@ -61,13 +62,14 @@ function App() {
                 <Route path='/trade-analytics' element={<Wrapper><TradeAnalytics /></Wrapper>} />
                 <Route path='/chart-views' element={<Wrapper><ChartViews/></Wrapper>} />
                 <Route path='/signin' element={<Signin />} />
-                <Route path='/signup' element={<Signup />} />
+                {/* <Route path='/signup' element={<Signup />} /> */}
                 <Route path='/early-access' element={<EarlyAccess />} />
                 <Route path='/features' element={<Features />} />
+                <Route path="*" element={<Page404/>}/>
                 <Route index element={<Home/>}/>
               </Routes>
           </Router>
-        </AuthProvider>
+        </APIProvider>
       </UIProvider>
     </div>
   );

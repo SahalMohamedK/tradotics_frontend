@@ -1,7 +1,7 @@
 import React from 'react'
 import logoImg from '../media/logo.png'
 import IconBtn from '../components/IconBtn'
-import { faFacebook, faInstagram, faTwitter, faYoutube } from '@fortawesome/free-brands-svg-icons'
+import { faFacebook, faInstagram, faLinkedinIn, faTwitter, faYoutube } from '@fortawesome/free-brands-svg-icons'
 import { Link } from 'react-router-dom'
 import { faEnvelope } from '@fortawesome/free-solid-svg-icons'
 import Icon from '../components/Icon'
@@ -13,10 +13,11 @@ export default function Footer() {
                 <div className='md:w-1/3'>
                     <img src={logoImg} alt="" width='200'/>
                     <div className='mt-5 flex justify-center md:justify-start space-x-5'>
-                        <IconBtn icon={faYoutube}/>
-                        <IconBtn icon={faFacebook}/>
-                        <IconBtn icon={faInstagram}/>
-                        <IconBtn icon={faTwitter}/>
+                        <a href='https://www.youtube.com/channel/UCyOguespfg26AYB2cd_uBlQ'><IconBtn icon={faYoutube}/></a>
+                        <a href='https://www.facebook.com/profile.php?id=100086898324327'><IconBtn icon={faFacebook}/></a>
+                        <a href='https://www.instagram.com/tradotics/'><IconBtn icon={faInstagram}/></a>
+                        <a href='https://twitter.com/tradotics'><IconBtn icon={faTwitter}/></a>
+                        <a href='https://www.linkedin.com/company/tradotics/?viewAsMember=true '><IconBtn icon={faLinkedinIn}/></a>
                     </div>
                 </div>
                 <div className='mt-10 md:mt-0 md:w-1/3'>
@@ -46,7 +47,7 @@ export default function Footer() {
                     Copyright &#169; 2023 <Link className='font-bold hover:text-indigo-500 duration-200'>Tradotics</Link> All Rights Reserved.
                 </div>
                 <div className='mt-4 md:mt-0 md:ml-auto'>
-                    Devele by <Link className='font-bold hover:text-indigo-500 duration-200'>Ink Signature</Link>. 
+                    Devele by <a href='https://www.instagram.com/inksignature/' className='font-bold hover:text-indigo-500 duration-200'>Ink Signature</a>. 
                 </div>
             </div>
         </footer>

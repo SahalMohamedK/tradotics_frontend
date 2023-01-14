@@ -5,7 +5,7 @@ export default function Button({children, className, onClick, disabled, loading 
   return (
     <button type='button' className={className} onClick={onClick} 
         disabled={disabled || loading}>
-        <Spinner className='mr-2' show={loading}/> {children}
+        <Spinner className='h-4 w-4 mr-2' show={loading}/> {children}
     </button>
   )
 }

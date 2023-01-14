@@ -12,7 +12,7 @@ import IconBtn from '../components/IconBtn'
 import InputField from '../components/InputField'
 import SelectField from '../components/SelectField'
 import { adjustmentsDialogTableAdapter, commissionSettingsTableAdapter, instituteSettingsTableAdapter, portfolioSettingsTableAdapter, referSettingsTableAdapter, withdrawalsSettingsTableAdapter } from '../adapters/table'
-import { useAuth } from '../contexts/AuthContext'
+import { useAPI } from '../contexts/APIContext'
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
@@ -22,7 +22,7 @@ import Button from '../components/Button'
 
 function Settings() {
     const [isUpdateUser, setIsUpdateUser] = useState(false)
-    const { isSigned, isFirstSigned, user, updateUser } = useAuth()
+    const { isSigned, isFirstSigned, user, updateUser } = useAPI()
     const { setIsLoading, toast } = useUI()
     const navigate = useNavigate()
 

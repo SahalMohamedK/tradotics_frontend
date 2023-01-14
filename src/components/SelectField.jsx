@@ -61,8 +61,9 @@ export class SelectField extends Component {
   render() {
     return (
       <div className={this.props.className}>
-        {this.props.label && <label className="mb-2 text-sm">
-            {this.props.label}
+        {this.props.label && <label htmlFor={this.props.id} className="flex items-baseline text-sm">
+            <div>{this.props.label}</div>
+            {!this.props.required && <div className='text-xs ml-1 text-secondary-500'>(optional)</div>}
         </label>}
         <div className={classNames('relative rounded-md flex items-center material bg-secondary-800 px-2 py-1.5 border duration-200', 
             this.state.focused?'border-indigo-500':'border-indigo-500/0', 
@@ -91,6 +92,10 @@ export class SelectField extends Component {
                                 </div>)}
                             </Listbox.Option>
                         ))}
+                        
+                        {this.values.length === 0 &&
+                            <div className='m-2 text-center text-sm text-secondary-500'>No options</div>
+                        }
                         </Listbox.Options>
                     </Transition>
                 </div>

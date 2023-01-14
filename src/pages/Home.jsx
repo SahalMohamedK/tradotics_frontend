@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react'
-import dashboardImg from '../media/dashboard.png'
+import React, { useEffect, useRef } from 'react'
+import dashboardImg from '../media/dashboard_2.png'
+import compareImg from '../media/compare.png'
 import { faCheckSquare, faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 import { Link } from 'react-router-dom'
 import Card from '../components/Card'
@@ -14,8 +15,9 @@ import Footer from '../elements/Footer'
 
 export default function Home() {
     const { setIsLoading } = useUI();
+    let pricingSection = useRef()
 
-    useEffect(() => {
+    useEffect(() => {        
         setIsLoading(false)
     }, [])
 
@@ -31,13 +33,13 @@ export default function Home() {
                     </div>
                 </section>
                 <section >
-                    <Carousel className='mx-7 lg:mx-28 h-auto lg:h-[500px] rounded-lg overflow-hidden shadow-xl shadow-indigo-900/25 border border-secondary-900'
-                        imgs={[dashboardImg]}/>
+                    <Carousel className='mx-7 lg:mx-28 h-auto lg:h-[500px] rounded-lg overflow-y-scroll shadow-xl shadow-indigo-900/25 border border-secondary-900'
+                        imgs={[dashboardImg, compareImg]}/>
                 </section>
-                <section className='mx-10 lg:mx-28 mt-32 md:h-[75vh]'>
+                <section className='mx-10 lg:mx-28 mt-16 lg:mt-32 md:h-[75vh]'>
                     <FeaturesTabs/>
                 </section>
-                <section className='mx-10 lg:mx-0 pt-16 lg:pt-32' id='pricing'>
+                <section ref={pricingSection} className='mx-10 lg:mx-0 pt-16 lg:pt-32' id='pricing'>
                     <div className='text-center'>
                         <div className='text-2xl font-bold'>Pricing Plans</div>
                         <div>We assure you, we are the best deal at the best price</div>
@@ -75,7 +77,7 @@ export default function Home() {
                                         <div className='mt-0.5 text-sm'>Running PnL for trades and day</div>
                                     </div>
                                 </div>
-                                <div className='mt-auto primary-btn'>Select this plan</div>
+                                <Link className='mt-auto primary-btn' to='/early-access'>Select this plan</Link>
                             </div>
                         </Card>
                         <Card className='md:w-1/2 lg:w-1/4 text-center mt-10 md:mt-0' innerClassName='primary-material'>
@@ -135,7 +137,7 @@ export default function Home() {
                                         <div className='mt-0.5 text-sm'>Stop loss and Target optimizer</div>
                                     </div>
                                 </div>
-                                <div className='mt-auto secondary-btn'>Select this plan</div>
+                                <Link className='mt-auto secondary-btn'to='/early-access'>Select this plan</Link>
                             </div>
                         </Card>
                     </div>
@@ -208,17 +210,17 @@ export default function Home() {
                         <div className='text-2xl font-bold'>FAQs</div>
                         <div>Frequently Asked Questions</div>
                     </div>
-                    <Collapse className='mx-auto mt-10 !text-lg !py-3 !px-3 w-full md:w-2/3 lg:w-1/2 ' label='What is a trading journal?'>
+                    <Collapse className='md:mx-auto bg-secondary-900 mt-10 md:text-lg !py-3 !px-3 !w-full md:!w-2/3 lg:!w-1/2 ' label='What is a trading journal?'>
                         <Card className='w-full md:w-2/3 lg:w-1/2 mx-auto'>
                             A trading journal is a record of a trader's trades, including details such as the trade setup, entry and exit points, and the reasoning behind the trade. Trading journals can be used to track performance, identify strengths and weaknesses, and improve overall trading strategy.
                         </Card>
                     </Collapse>
-                    <Collapse className='mx-auto mt-2 !text-lg !py-3 !px-3 w-full md:w-2/3 lg:w-1/2 ' label='What Brokers/Countries do you support?'>
+                    <Collapse className='md:mx-auto bg-secondary-900 mt-2 md:text-lg !py-3 !px-3 !w-full md:!w-2/3 lg:!w-1/2 ' label='What Brokers/Countries do you support?'>
                         <Card className='w-full md:w-2/3 lg:w-1/2 mx-auto'>
                             We are constantly bringing new brokers from around the world into our platform. If your broker is missing. To add your broker, <Link to='/early-access' className='hover:text-indigo-500 duration-200 inline-flex items-center'>click here. <Icon icon={faUpRightFromSquare} size='sm'/></Link>
                         </Card>
                     </Collapse>
-                    <Collapse className='mx-auto mt-2 !text-lg !py-3 !px-3 w-full md:w-2/3 lg:w-1/2 ' label='What assets and brokers do you support?'>
+                    <Collapse className='md:mx-auto bg-secondary-900 mt-2 md:text-lg !py-3 !px-3 !w-full md:!w-2/3 lg:!w-1/2 ' label='What assets and brokers do you support?'>
                         <Card className='w-full md:w-2/3 lg:w-1/2 mx-auto'>
                             <ul className='ml-5 list-disc'>
                                 <li>Stock & Stock options</li>
@@ -230,7 +232,7 @@ export default function Home() {
                             </ul>
                         </Card>
                     </Collapse>
-                    <Collapse className='mx-auto mt-2 !text-lg !py-3 !px-3 w-full md:w-2/3 lg:w-1/2 ' label='How can I improve my trading performance by using your stoploss and target optimizer?'>
+                    <Collapse className='md:mx-auto bg-secondary-900 mt-2 md:text-lg !py-3 !px-3 !w-full md:!w-2/3 lg:!w-1/2 ' label='How can I improve my trading performance by using your stoploss and target optimizer?'>
                         <Card className='w-full md:w-2/3 lg:w-1/2 mx-auto'>
                             One way to improve your trading performance using our Tradotics Trading Journal is by utilizing our prime feature, the Stoploss and Target Optimizer. This feature will suggest the best risk/reward ratios to take in future trades in order to achieve maximum profit.
                         </Card>

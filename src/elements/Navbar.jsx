@@ -5,19 +5,18 @@ import IconBtn from '../components/IconBtn'
 import logo from '../media/logo.png'
 import { Link } from 'react-router-dom'
 import { Menu, Transition } from '@headlessui/react'
-import { Fragment, useState } from 'react'
+import { Fragment } from 'react'
 import { classNames } from '../utils'
-import { useEffect } from 'react'
-import { useAuth } from '../contexts/AuthContext'
+import { useAPI } from '../contexts/APIContext'
 
 
 export default function Navbar({filter = true}) {
-  const { user, signout } = useAuth()
+  const { user, signout } = useAPI()
   
   return (
     <div className='backdrop-blur border-b bg-primary-900/50 border-white/10 text-white font-medium top-0 fixed w-full z-50 px-4 md:px-8 py-3'>
       <div className='items-center flex'>
-        <img src={logo} alt="" width='200'/>
+        <Link to='/dashboard'><img src={logo} alt="" width='200'/></Link>
         {filter && 
           <Filter className='ml-auto mr-3 md:mr-0' label='Apply filter'/>
         }

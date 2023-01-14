@@ -3,7 +3,7 @@ import Icon from "../components/Icon";
 
 export function iconTabAdapter(selected, {label, icon, className}){
     return <div className={classNames('px-3 py-2 duration-200 rounded-lg flex items-center font-medium my-1 cursor-pointer mr-1 md:mr-0', 
-        selected?'active-primary-material':'text-secondary-500 hover:text-white', className)}>
+        selected?'primary-material':'text-secondary-500 hover:text-white', className)}>
         <Icon className='mr-2' icon={icon}/>
         <div className="whitespace-nowrap">{label}</div>
     </div>
@@ -11,7 +11,7 @@ export function iconTabAdapter(selected, {label, icon, className}){
 
 export function simpleTabAdapter(selected, {label, className}){
     return <div className={classNames('px-2 py-1 duration-200 rounded-lg font-bold my-1 text-sm cursor-pointer mr-1', 
-        selected?'active-primary-material':'text-secondary-400 hover:text-white material bg-secondary-800', className)}>
+        selected?'primary-material':'text-secondary-400 hover:text-white material bg-secondary-800', className)}>
         {label}
     </div>
 }

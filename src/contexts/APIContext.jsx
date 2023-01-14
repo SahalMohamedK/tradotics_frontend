@@ -2,16 +2,15 @@ import React, { useContext, useRef } from "react";
 import axios from 'axios'
 import { useState } from "react";
 import { useEffect } from "react";
+import { API_URL } from "../config";
 
-const API_URL = 'http://127.0.0.1:8000'
+export const APIContext = React.createContext()
 
-export const AuthContext = React.createContext()
-
-export function useAuth(){
-    return useContext(AuthContext)
+export function useAPI(){
+    return useContext(APIContext)
 }
 
-export default function AuthProvider({children}) {
+export default function APIProvider({children}) {
     const [isSigned, setIsSigned] = useState()
     const [isFirstSigned, setIsSFirstSigned] = useState()
     const [user, setUser] = useState({})
@@ -95,21 +94,36 @@ export default function AuthProvider({children}) {
         })
     }
 
+    function getBrockers(){
+        return axios.get(API_URL+'/brockers')
+    }
+
+    function getBrockerDetails(id){
+        return axios.get(API_URL+'/brocker/'+id)
+    }
+
+    function addEarlyAccessUser(data){
+        return axios.post(API_URL+'/early-access', data, {headers: {'Content-Type': 'multipart/form-data'}})
+    }
+    
     const value = {
         signup,
         signin,
         signout,
         getUser,
         updateUser,
+        getBrockers,
+        getBrockerDetails,
+        addEarlyAccessUser,
         user,
         isFirstSigned,
         isSigned
     }
 
   return (
-    <AuthContext.Provider value={value}>
+    <APIContext.Provider value={value}>
         {children}
-    </AuthContext.Provider>
+    </APIContext.Provider>
   )
 }
 

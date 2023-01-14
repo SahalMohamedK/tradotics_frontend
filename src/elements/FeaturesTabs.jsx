@@ -206,11 +206,11 @@ export default function FeaturesTabs() {
             <Card className='-m-2 lg:m-0'>
                 <TabBar className='md:flex justify-items-stretch justify-between' tabClassName='w-full mx-1' 
                     view={tabView} adapter={iconTabAdapter}>
-                    <Tab className='secondary-material bg-secondary-800' id='advance' icon={faClipboard} label='Advance reports' />
+                    <Tab className='secondary-material bg-secondary-800' id='advance' icon={faClipboard} label='Advance Reports'active />
                     <Tab className='secondary-material bg-secondary-800' id='insights' icon={faLightbulb} label='Automated Insights'/>
-                    <Tab className='secondary-material bg-secondary-800' id='journal' icon={faChartSimple} label='Journal' />
+                    <Tab className='secondary-material bg-secondary-800' id='journal' icon={faChartSimple} label='Journal'/>
                     <Tab className='secondary-material bg-secondary-800' id='analytics' icon={faLineChart} label='Analytics' />
-                    <Tab className='secondary-material bg-secondary-800' id='compare' icon={faColumns} label='Compare strategies' active/>
+                    <Tab className='secondary-material bg-secondary-800' id='compare' icon={faColumns} label='Compare Strategies'/>
                 </TabBar>
             </Card>
             <TabView className='mt-10' ref={tabView}>

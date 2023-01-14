@@ -40,31 +40,20 @@ export class InputField extends Component {
         });
     }
 
-    getValue(check = true, trim = true){
+    getValue(trim = true){
         let value = this.state.value;
         let error = this.props.validator ? this.props.validator(value) : '';
-
-        if(check){
-            if(this.state.type == 'text' && trim){
-                value = value.trim();
-            }
-            if(value === '' && this.props.required){
-                this.setError('This field is rquired!')
-            }else if(error){
-                this.setError(error);
-            }else{
-                this.setError('');
-                if(this.state.type == 'number'){
-                    return Number(value);
-                }
-                return value;
-            }
+        if(this.state.type == 'text' && trim){
+            value = value.trim();
+        }
+        if(value === '' && this.props.required){
+            this.setError('This field is rquired!')
+        }else if(error){
+            this.setError(error);
         }else{
+            this.setError('');
             if(this.state.type == 'number'){
                 return Number(value);
-            }
-            if(this.props.type == 'text' && trim){
-                value = value.trim();
             }
             return value;
         }
@@ -86,8 +75,9 @@ export class InputField extends Component {
   render() {
     return (
         <div className={this.props.className}>
-            {this.props.label && <label htmlFor={this.props.id} className="mb-2 text-sm">
-                {this.props.label}
+            {this.props.label && <label htmlFor={this.props.id} className="flex items-baseline text-sm">
+                <div>{this.props.label}</div>
+                {!this.props.required && <div className='text-xs ml-1 text-secondary-500'>(optional)</div>}
             </label>}
             <div className={classNames('material rounded-lg flex items-center px-2 py-1 border duration-200',
                     this.props.disabled?'bg-secondary-700':'bg-secondary-800',
@@ -96,18 +86,11 @@ export class InputField extends Component {
                 <Icon className={this.state.focused?'text-indigo-500':this.state.error?'text-red-500':'text-secondary-600'} icon={this.props.icon} size='sm'/>
                 <input ref={this.input} type={this.state.type} id={this.props.id} disabled={this.props.disabled}
                 className={classNames("bg-inherit text-sm rounded border-0 p-1 focus:ring-0 grow min-w-0",
-                    this.props.disabled?'text-secondary-500':'', 
-                    this.props.type == 'file'?'hidden':'')}  
+                    this.props.disabled?'text-secondary-500':'')}  
                 onChange={(e) => this.setValue(e.target.value)} placeholder={this.props.placeholder} value={this.state.value} 
                 onFocus={() => this.setState({focused: true})} onBlur={() => this.setState({focused: false})}
                 readOnly={this.props.readOnly} onKeyPress={this.onKeyPress}/>
                 {this.addons.map((addon, i) => <div key={i}>{addon}</div>)}
-                {this.props.type == 'file' && 
-                    <>
-                    <input className="bg-inherit text-sm rounded border-0 p-1 focus:ring-0 grow min-w-0"
-                         type="text" value={this.state.value?filename(this.state.value):'No file choosen'} disabled />
-                    <IconBtn icon={faUpload} size='sm' className='ml-1' onClick={() => this.input.current.click()}/></>
-                }
                 {this.props.type == 'password' && this.state.type == 'password' &&
                     <IconBtn icon={faEye} size='sm' className='ml-1' onClick={() => this.setState({type:'text'})}/>
                 }

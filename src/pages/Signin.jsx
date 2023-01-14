@@ -6,7 +6,7 @@ import Card from '../components/Card'
 import InputField from '../components/InputField'
 import { useState } from 'react'
 import { useUI } from '../contexts/UIContext'
-import { useAuth } from '../contexts/AuthContext'
+import { useAPI } from '../contexts/APIContext'
 import { useNavigate } from 'react-router-dom';
 import Button from '../components/Button'
 import Header from '../elements/Header'
@@ -17,7 +17,7 @@ export default function Signin() {
     let emailRef = useRef()
     let passwordRef = useRef()
 
-    const {signin, isSigned, getUser} = useAuth()
+    const {signin, isSigned, getUser} = useAPI()
     const { toast, setIsLoading} = useUI()
     const navigate = useNavigate()
 
@@ -61,7 +61,8 @@ export default function Signin() {
                     <Card className='mx-5 md:mx-0 text-center'>
                         <div className='my-5 md:mx-5'>
                             <div className='text-2xl font-bold'>Sign In</div>
-                            <div className='text-sm text-secondary-500'>Don't have an account? <Link className='text-indigo-500' to='/signup'>Signup</Link></div>
+                            {/* <div className='text-sm text-secondary-500'>Don't have an account? <Link className='text-indigo-500' to='/signup'>Signup</Link></div> */}
+                            <div className='text-sm text-secondary-500'>Don't have an account? <Link className='text-indigo-500' to='/early-access'>Apply for early access</Link></div>
                             <div className='text-left my-5'>
                                 <InputField ref={emailRef} className='mb-2' label='Email' icon={faUser} 
                                     disabled={isSignin} onEnter={onClick} required/>
@@ -70,8 +71,8 @@ export default function Signin() {
                             </div>
                             <div className='w-fit mx-auto pt-3'>
                                 <Button className='w-full primary-btn' onClick={onClick} loading={isSignin}>Signin</Button>
-                                <div className='my-2 text-xs font-bold text-secondary-500'>OR</div>
-                                <button className='secondary-btn w-full'>Signin with Google</button>
+                                {/* <div className='my-2 text-xs font-bold text-secondary-500'>OR</div>
+                                <button className='secondary-btn w-full'>Signin with Google</button> */}
                             </div>
                         </div>
                     </Card>

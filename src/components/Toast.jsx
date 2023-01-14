@@ -79,7 +79,7 @@ export class Toast extends Component {
 
   render() {
     return (
-        <Transition show={this.state.show} className='fixed bottom-0 m-5 z-50 duration-500'
+        <Transition show={this.state.show} className='fixed bottom-0 m-5 z-[1000] duration-500'
             enterFrom='-right-[100%]' enterTo='right-0' 
             leaveFrom='right-0' leaveTo='-right-[100%]'>
             <Card className='min-w-[200px] max-w-[300px]' innerClassName='!p-0 relative !bg-primary-900'>

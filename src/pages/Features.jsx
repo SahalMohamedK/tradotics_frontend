@@ -66,7 +66,7 @@ export default function Features() {
                                     <Icon className='primary-material !w-8 !h-8' icon={icon} box/>
                                     <div className='font-bold text-lg'>{title}</div>
                                 </div>
-                                <div className='text-secondary-500'>{desc}</div>
+                                <div>{desc}</div>
                             </Card>
                         )}
                     </div>
@@ -83,7 +83,7 @@ export default function Features() {
                                     <Icon className='primary-material !w-8 !h-8' icon={icon} box/>
                                     <div className='font-bold text-lg'>{title}</div>
                                 </div>
-                                <div className='text-secondary-500'>{desc}</div>
+                                <div>{desc}</div>
                             </Card>
                         )}
                     </div>

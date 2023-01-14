@@ -14,7 +14,7 @@ import Calendar from '../elements/Calendar';
 import Insightes from '../elements/Insightes';
 import ProgressCard from '../elements/ProgressCard'
 import BarGraphCard from '../elements/BarGraphCard'
-import { useAuth } from '../contexts/AuthContext';
+import { useAPI } from '../contexts/APIContext';
 import { useNavigate } from 'react-router-dom';
 import { useUI } from '../contexts/UIContext';
  
@@ -28,21 +28,21 @@ function Dashboard() {
 
     let tabView = useRef()
 
-    const { isSigned, isFirstSigned, user } = useAuth()
+    const { isSigned, isFirstSigned, user } = useAPI()
     const { toast, setIsLoading} = useUI()
     const navigate = useNavigate()
 
     useEffect(() => {
-        // if(isSigned === false){
-        //     navigate('/signin')
-        // }else if (isSigned && isFirstSigned){
-        //     navigate('/settings')
-        //     toast.info('Setup your profile', 'First you need to setup user user profile details.')
-        // }else if(isSigned){
-        //     setIsLoading(false)
-        // }
+        if(isSigned === false){
+            navigate('/signin')
+        }else if (isSigned && isFirstSigned){
+            navigate('/settings')
+            toast.info('Setup your profile', 'First you need to setup user user profile details.')
+        }else if(isSigned){
+            setIsLoading(false)
+        }
         setIsLoading(false)
-    }, [isSigned,isFirstSigned])
+    }, [isSigned, isFirstSigned])
 
     return (
         <div className='md:flex flex-wrap mt-16'>

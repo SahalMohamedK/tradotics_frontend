@@ -9,7 +9,7 @@ export class CheckboxField extends Component {
     constructor(props){
         super(props);
 
-        this.defaultValues = hasValue(this.props.defaultValues, hasValue(this.props.selectedValues, [0]))
+        this.defaultValues = hasValue(this.props.defaultValues, hasValue(this.props.selectedValues, []))
         this.values = hasValue(this.props.values, [])
 
         this.state = {
@@ -64,36 +64,45 @@ export class CheckboxField extends Component {
     }
 
     getValue(){
-        let value = this.state.values;
+        let values = this.state.values;
         let error = this.props.validator ? this.props.validator(values) : '';
-
-        if(value.length != 0 && this.props.required){
+        if(values.length === 0 && this.props.required){
             this.setError('This field is rquired!')
         }else if(error){
             this.setError(error);
         }else{
             this.setError('');
+            if(values.length === 0){
+                return null
+            }
+            if(this.props.convertor){
+                return this.props.convertor(values)
+            }
             return values;
         }
+        
     }
 
   render() {
     return (
-      <div className={this.props.className}>
-        {this.props.label && <label className="mb-2 text-sm">
-            {this.props.label}
+      <div className={classNames('relative',this.props.className)}>
+        {this.props.label && <label htmlFor={this.props.id} className="flex items-baseline text-sm">
+            <div>{this.props.label}</div>
+            {!this.props.required && <div className='text-xs ml-1 text-secondary-500'>(optional)</div>}
         </label>}
-        <div className={classNames('relative rounded-md flex items-center material bg-secondary-800 px-2 py-1.5 border duration-200', 
+        <div className={classNames('relative rounded-md flex items-center material bg-secondary-800 px-2 py-1.5 border duration-200',
+            this.props.disabled?'bg-secondary-700 text-secondary-600':'bg-secondary-800',
             this.state.focused?'border-indigo-500':'border-indigo-500/0', 
             this.props.innerClassName)}>
             <Icon className={this.state.focused?'text-indigo-500':'text-secondary-600'} icon={this.props.icon} size='sm'/>
-            <Popover  className='text-sm rounded border-0 focus:ring-0 grow min-w-0'
+            <Popover  
+                className='text-sm rounded border-0 focus:ring-0 grow min-w-0'
                 onFocus={() => this.setState({focused: true})} 
-                onBlur={() => this.setState({focused: false})} disabled={this.props.disabled}>
+                onBlur={() => this.setState({focused: false})} >
                 <div className="w-full">
                     <Popover.Button className="flex items-center justify-between bg-inherit w-full cursor-pointer px-1 text-left focus:outline-none">
                         {({open}) => <>
-                            <div className='flex w-full'>
+                            <div className='flex w-full overflow-x-auto'>
                                 {this.state.values.map((v, i) => 
                                     <div key={i} className='bg-secondary-700 px-2 py-0.5 text-sm rounded mr-1 flex items-center'>
                                         {this.values[v]}
@@ -105,6 +114,7 @@ export class CheckboxField extends Component {
                                         </div>
                                     </div>
                                 )}
+                                
                             </div>
                             <Icon className={classNames('duration-200',open?'rotate-180':'')} icon={faAngleDown} size='sm'/>
                         </>}
@@ -122,12 +132,18 @@ export class CheckboxField extends Component {
                                 </div>
                             </div>
                         })}
+                        
+                        {this.values.length === 0 &&
+                            <div className='m-2 text-center text-sm text-secondary-500'>No options</div>
+                        }
                         </Popover.Panel>
                     </Transition>
                 </div>
             </Popover>
         </div>
         {this.state.error && <p className='text-red-500 text-xs mt-1' >{this.state.error}</p>}
+        
+        <div className={this.props.disabled?'absolute top-0 bottom-0 left-0 right-0':''}></div>
     </div>
     )
   }

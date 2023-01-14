@@ -74,24 +74,6 @@ export function addItem(array, item){
     return [...array, item]
 }
 
-export function incrementValue(obj, key){
-    if(obj.hasOwnProperty(key)){
-        obj[key]+=1
-    }else{
-        obj[key]=1
-    }
-    return obj
-}
-
-export function decrementValue(obj, key){
-    if(obj.hasOwnProperty(key)){
-        obj[key]-=1
-    }else{
-        obj[key]=0
-    }
-    return obj
-}
-
 export function range(start, end, step){
     let  a = []
     for(var i =start ; i<end; i+=step){
@@ -101,9 +83,78 @@ export function range(start, end, step){
 }
 
 export function isEmpty(obj) {
-    return Object.keys(obj).length === 0;
+    return obj && Object.keys(obj).length === 0;
 }
 
 export function format(string, args){
     return string.replace(/{([a-zA-Z_][0-9a-zA-Z_]+)}/g, (m, i) => hasValue(args[i], m))
+}
+
+export function fileSize(bytes, si=false, dp=1) {
+  const thresh = si ? 1000 : 1024;
+
+  if (Math.abs(bytes) < thresh) {
+    return bytes + ' B';
+  }
+
+  const units = si 
+    ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'] 
+    : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+  let u = -1;
+  const r = 10**dp;
+
+  do {
+    bytes /= thresh;
+    ++u;
+  } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
+
+
+  return bytes.toFixed(dp) + ' ' + units[u];
+}
+
+export class Form{
+    constructor(){
+        this.fields = {}
+        this.ref = this.ref.bind(this)
+    }
+
+    ref(r) {
+        if(r){
+            if(r.props.name){
+                this.fields[r.props.name] = r
+            }else if(r.props.label){
+                this.fields[r.props.label.toLowerCase()] = r
+            }
+        }
+    }
+
+    isValid(){
+        let valid = true
+        for(var key in this.fields){
+            if (this.fields[key].getValue() === undefined){
+                valid = false
+            }
+        }
+        return valid
+    }
+
+    getData(){
+        let data = new FormData()
+        for(var key in this.fields){
+            let value = this.fields[key].getValue()
+            if(value){
+                data.append(key, value)
+            }
+        }
+        return data
+    }
+
+    setError(error){
+        for (var key in error){
+            let field = this.fields[key]
+            if(field){
+                field.setError(error[key])
+            }
+        }
+    }
 }

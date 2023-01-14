@@ -8,21 +8,17 @@ import { useUI } from '../contexts/UIContext'
 import Button from '../components/Button'
 import { useRef } from 'react'
 import { useState } from 'react'
-import { useAuth } from '../contexts/AuthContext'
+import { useAPI } from '../contexts/APIContext'
 
 export default function Signup() {
     const [isSignup, setIsSignup] = useState()
     const { setIsLoading, toast } = useUI()
-    const { signup } = useAuth()
+    const { signup } = useAPI()
 
     let emailInput = useRef()
     let usernameInput = useRef()
     let passwordInput = useRef()
     let rePasswordInput = useRef()
-
-    useEffect(() => {
-        toast.error('Server error!','Somthing went wrong. Check your internet connection.', 'wait')
-    }, [])
 
     function onClick(){
         setIsSignup(true)
