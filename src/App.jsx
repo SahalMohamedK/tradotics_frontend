@@ -46,7 +46,7 @@ function App() {
         <APIProvider>
           <Router>
               <Routes>
-                <Route path='/dashboard' element={<Wrapper><Dashboard /></Wrapper>} />
+                {/* <Route path='/dashboard' element={<Wrapper><Dashboard /></Wrapper>} />
                 <Route path='/detailed-report' element={<Wrapper><DetailedReport/></Wrapper>} />
                 <Route path='/day-views' element={<Wrapper><DayViews/></Wrapper>} />
                 <Route path='/compare' element={<Wrapper filter={false}><Compare/></Wrapper>} />
@@ -60,7 +60,7 @@ function App() {
                 <Route path='/institute-page1' element={<Wrapper><InstitutePage1/></Wrapper>} /> 
                 <Route path='/institute-dashboard' element={<Wrapper><InstituteDashboard/></Wrapper>} /> 
                 <Route path='/trade-analytics' element={<Wrapper><TradeAnalytics /></Wrapper>} />
-                <Route path='/chart-views' element={<Wrapper><ChartViews/></Wrapper>} />
+                <Route path='/chart-views' element={<Wrapper><ChartViews/></Wrapper>} /> */}
                 <Route path='/signin' element={<Signin />} />
                 {/* <Route path='/signup' element={<Signup />} /> */}
                 <Route path='/early-access' element={<EarlyAccess />} />
