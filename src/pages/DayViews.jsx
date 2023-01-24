@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { Line } from 'react-chartjs-2';
 import { faUpRightAndDownLeftFromCenter } from '@fortawesome/free-solid-svg-icons';
 import { areaGraphData, areaGraphOptions } from '../libs';
@@ -7,6 +7,7 @@ import Table from '../components/Table';
 import Dialog from '../components/Dialog'
 import IconBtn from '../components/IconBtn';
 import { journalDialogTableAdapter } from '../adapters/table';
+import { useUI } from '../contexts/UIContext';
 
 export default function Journal() {
 
@@ -20,6 +21,12 @@ export default function Journal() {
         [75, 4, 255, 2.55, 3,1],
         [75, 4, 255, 2.55, 3,1],
     ]
+
+    const { setIsLoading } = useUI()
+
+    useEffect(() => {
+        setIsLoading(false)
+    }, [])
 
   return (
     <div className='md:flex flex-wrap mt-16'>

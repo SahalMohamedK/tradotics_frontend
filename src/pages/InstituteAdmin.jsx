@@ -1,5 +1,5 @@
 import { faCoins, faPercentage, faSackDollar, faSackXmark, faUsers, faZap } from '@fortawesome/free-solid-svg-icons'
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import ProgressCard from '../elements/ProgressCard'
 import RateCard from '../elements/RateCard'
 import ValueCard from '../elements/ValueCard'
@@ -8,11 +8,18 @@ import Card from '../components/Card'
 import { instituteAdminTableAdapter } from '../adapters/table'
 import Table from '../components/Table'
 import SelectField from '../components/SelectField'
+import { useUI } from '../contexts/UIContext'
 
 export default function InstituteAdmin() {
 
   const [tableNumber, setTableNumber] = useState()
   let table = useRef()
+
+  const { setIsLoading } = useUI()
+
+  useEffect(() => {
+    setIsLoading(false)
+  }, [])
 
   return (
     <div className='pt-16 h-full flex flex-col'>

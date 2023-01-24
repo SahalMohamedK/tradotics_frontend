@@ -1,1 +1,3 @@
-export const API_URL = 'http://139.59.5.133'
+const debug = true
+
+export const API_URL = debug ? "http://127.0.0.1:8000" : 'https://api.tradotics.com'

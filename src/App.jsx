@@ -22,19 +22,21 @@ import DetailedReport from './pages/DetailedReport';
 import InstituteAdmin from './pages/InstituteAdmin';
 import InstituteDashboard from './pages/InstituteDashboard';
 import { Chart, registerables } from 'chart.js';
-import {BrowserRouter as Router, Routes, Route} from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import EarlyAccess from './pages/EarlyAccess';
 import Page404 from './pages/Page404';
+import Test from './Test';
+import FilterProvider from './contexts/FilterContext';
 
 Chart.register(...registerables);
 
-function Wrapper({children, filter = true}){
+function Wrapper({ children, filter = true }) {
   return (<>
-    <Navbar filter={filter}/>
-    <Sidebar/>
+    <Navbar filter={filter} />
+    <Sidebar />
     <div className='relative md:ml-[57px]'>
       <div className='p-3 md:h-screen overflow-y-auto mb-16 md:mb-0'>{children}</div>
-    </div>  
+    </div>
   </>
   )
 }
@@ -44,15 +46,19 @@ function App() {
     <div>
       <UIProvider>
         <APIProvider>
-          <Router>
+          <FilterProvider>
+            <Router>
               <Routes>
-                {/* <Route path='/dashboard' element={<Wrapper><Dashboard /></Wrapper>} />
+                <Route path='/test' element={<Test />} />
+                <Route path='/dashboard' element={<Wrapper><Dashboard /></Wrapper>} />
+                <Route path='/settings' element={<Wrapper><Settings /></Wrapper>} />
+                <Route path='/add-trades' element={<Wrapper><AddTrades /></Wrapper>} />
+                <Route path='/stopless-and-target' element={<Wrapper><SLnTG /></Wrapper>} />
+                
                 <Route path='/detailed-report' element={<Wrapper><DetailedReport/></Wrapper>} />
                 <Route path='/day-views' element={<Wrapper><DayViews/></Wrapper>} />
                 <Route path='/compare' element={<Wrapper filter={false}><Compare/></Wrapper>} />
-                <Route path='/stopless-and-target' element={<Wrapper><SLnTG /></Wrapper>} />
-                <Route path='/settings' element={<Wrapper><Settings /></Wrapper>} />
-                <Route path='/add-trades' element={<Wrapper><AddTrades /></Wrapper>} />
+                
                 <Route path='/trades' element={<Wrapper><Trades/></Wrapper>} />
                 <Route path='/calendar-views' element={<Wrapper><CalendarViews/></Wrapper>} />
                 <Route path='/institute' element={<Wrapper><Institute/></Wrapper>} />
@@ -60,15 +66,16 @@ function App() {
                 <Route path='/institute-page1' element={<Wrapper><InstitutePage1/></Wrapper>} /> 
                 <Route path='/institute-dashboard' element={<Wrapper><InstituteDashboard/></Wrapper>} /> 
                 <Route path='/trade-analytics' element={<Wrapper><TradeAnalytics /></Wrapper>} />
-                <Route path='/chart-views' element={<Wrapper><ChartViews/></Wrapper>} /> */}
+                <Route path='/chart-views' element={<Wrapper><ChartViews/></Wrapper>} />
                 <Route path='/signin' element={<Signin />} />
-                {/* <Route path='/signup' element={<Signup />} /> */}
+                <Route path='/signup' element={<Signup />} />
                 <Route path='/early-access' element={<EarlyAccess />} />
                 <Route path='/features' element={<Features />} />
-                <Route path="*" element={<Page404/>}/>
-                <Route index element={<Home/>}/>
+                <Route path="*" element={<Page404 />} />
+                <Route index element={<Home />} />
               </Routes>
-          </Router>
+            </Router>
+          </FilterProvider>
         </APIProvider>
       </UIProvider>
     </div>

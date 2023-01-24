@@ -33,6 +33,9 @@ export class Table extends Component {
         })
     }
 
+    removeAll(){
+        this.setState({data: []})
+    }
     render() {
         return (
             <table className={classNames('relative min-w-full text-center border-separate border-spacing-y-3 align-middle', this.props.className)}>

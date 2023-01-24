@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { instituteGroupTable } from '../adapters/table'
 import Card from '../components/Card'
 import Table from '../components/Table'
+import { useUI } from '../contexts/UIContext'
 
 export default function Institute() {
     let datas = [
@@ -54,6 +55,12 @@ export default function Institute() {
             [1, 'Fazin P K', 97, 2.2]
         ]]
     ]
+
+    const { setIsLoading } = useUI()
+
+    useEffect(() => {
+        setIsLoading(false)
+    }, [])
   return (
     <div className='mt-16'>
         <div className='font-bold px-2 mt-5 mb-4 text-xl md:mt-5 lg:mt-0'>Institute</div>

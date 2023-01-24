@@ -1,96 +1,117 @@
-import React, {  Fragment, useRef } from 'react'
+import React, {  Fragment, useEffect, useRef, useState } from 'react'
 import { useReducer } from 'react'
-import { classNames, isEmpty } from '../utils'
+import { classNames, isEmpty, objectMap } from '../utils'
 import { filterTabAdapter } from '../adapters/tabs'
 import { TabBar, TabView, Tab } from '../components/Tab'
 import { Disclosure, Popover, Transition } from '@headlessui/react'
 import { faAngleDown, faCalendar, faFilter, faFilterCircleXmark, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
 import Icon from '../components/Icon'
 import InputField from '../components/InputField'
+import Button from '../components/Button'
+import { useFilter } from '../contexts/FilterContext'
+import { useAPI } from '../contexts/APIContext'
 
 const initSelection = {}
 
-let filters = [
-  ['Symbol',['TATAMOTORS', 'RELIANCE', 'APPLE']],
-  ['Setup',['GAP UP', 'RSI 2', 'RSI', 'MOVING AVG']],
-  ['Side',['Buy', 'Sell']],
-  ['Day',['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']],
-]
-
-const selectionReducer = (state, action) => {
-  switch(action.type){
-    case 'sf':
-      var {i, j} = action
-      if(state.hasOwnProperty(i)){
-        state[i].add(j)
-      }else{
-        state[i] = new Set([j])
-      }
-      break
-    case 'uf':
-      var {i, j} = action
-      if(state.hasOwnProperty(i)){
-        if(state[i].length>1){
-          state[i].delete(j)
-        }else{
-          delete state[i]
-        }
-      }
-      break
-    case 'scf':
-      var {i} = action
-      for(var j=0; j<filters[i][1].length; j++){
-        state = selectionReducer(state, {type:'sf', i, j})
-      }
-      break
-    case 'ucf':
-      var {i} = action
-      for(var j=0; j<filters[i][1].length; j++){
-        state = selectionReducer(state, {type:'uf', i, j})
-      }
-      break
-    case 'saf':
-      for(var i=0; i<filters.length;i++){
-        for(var j=0; j<filters[i][1].length; j++){
-          state = selectionReducer(state, {type:'sf', i, j})
-        }
-      }
-      break
-    case 'uaf':
-      for(var i=0; i<filters.length;i++){
-        for(var j=0; j<filters[i][1].length; j++){
-          state = selectionReducer(state, {type:'uf', i, j})
-        }
-      }
-      break
-  }
-  return {...state}
-}
-
 export function Filter({className, label}) {
+  
+  const { setFilters } = useFilter()
+  const { getFilters } = useAPI()
+  const [filters, _setFilters] = useState([])
+
+  let buttonRef = useRef()
+
+  const selectionReducer =  (state, action) => {
+    switch (action.type) {
+      case 'sf':
+        var { key, label } = action
+        if (state.hasOwnProperty(key)) {
+          state[key].add(label)
+        } else {
+          state[key] = new Set([label])
+        }
+        break
+      case 'uf':
+        var { key, label } = action
+        if (state.hasOwnProperty(key)) {
+          if (state[key].size > 1) {
+            state[key].delete(label)
+          } else {
+            delete state[key]
+          }
+        }
+        break
+      case 'scf':
+        var { key } = action
+        for (var j in filters[key]) {
+          state = selectionReducer(state, { type: 'sf', key, label })
+        }
+        break
+      case 'ucf':
+        var { key } = action
+        for (var j in filters[key]) {
+          state = selectionReducer(state, { type: 'uf', key, label })
+        }
+        break
+      case 'saf':
+        for (var key in filters) {
+          for (var label in filters[key]) {
+            state = selectionReducer(state, { type: 'sf', key, label })
+          }
+        }
+        break
+      case 'uaf':
+        for (var key in filters) {
+          for (var label in filters[key]) {
+            state = selectionReducer(state, { type: 'uf', key, label })
+          }
+        }
+        break
+    }
+    return { ...state }
+  }
+
   const [selection, setSelection] = useReducer(selectionReducer, initSelection)
+
 
   let tabView = useRef()
 
+  useEffect(() => {
+    getFilters().then(response => {
+      _setFilters(response.data)
+    }).catch(err => {
+      console.log(err);
+    })
+  }, [])
+
+  function apply(){
+    let converted = {}
+    for(var key in selection){
+      converted[key] = Array.from(selection[key])
+    }
+    setFilters(converted)
+    buttonRef.current.click()
+  }
+
   function getSelected(){
-    let selected = []
-    for(let i in selection){
+    let selected =[]
+    for(let key in selection){
       let category = []
-      selection[i].forEach((j) => {
+      selection[key].forEach((label) => {
         category.push(
-          <div key={j} className='text-sm py-1 border-l border-secondary-600 text-secondary-500 ml-3'>
-            <div>- {filters[i][1][j]}</div>
+          <div key={label} className='text-sm py-1 border-l border-secondary-600 text-secondary-500 ml-3'>
+            <div>- {label}</div>
           </div>
         )
       })
       if(category.length){
         selected.push(
-          <div key={i}>
+          <div key={key}>
             <Disclosure >
               {({open}) => (<>
                 <Disclosure.Button className='text-sm py-1 text-secondary-500 flex'>
                   <Icon className={classNames('ml-1 md:ml-0 duration-200', open?'rotate-180':'')} icon={faAngleDown} size='sm'/>
-                  {filters[i][0]}
+                  {key}
                 </Disclosure.Button>
                 <Disclosure.Panel>
                   {category}
@@ -107,17 +128,17 @@ export function Filter({className, label}) {
 
   function getTotalNumber(){
     var n = 0
-    for(var i in selection){
-      n+=selection[i].size
+    for(var key in selection){
+      n+=selection[key].size
     }
     return n
   }
 
   return (
-    <Popover className={classNames("md:relative", className)}>
+    <Popover className={classNames("md:relative", className)} >
       {({ open }) => (
         <>
-          <Popover.Button className={classNames('flex items-center outline-none duration-200 bg-secondary-800/50 border-white/10 border text-sm text-secondary-500 hover:text-white px-2 md:px-3 py-1 rounded-full font-medium')}>
+          <Popover.Button ref={buttonRef} className={classNames('flex items-center outline-none duration-200 bg-secondary-800/50 border-white/10 border text-sm text-secondary-500 hover:text-white px-2 md:px-3 py-1 rounded-full font-medium')}>
             <Icon icon={faFilter}/>
             <div className='ml-2 hidden md:block'>{label}</div>
             <div className='ml-1 md:ml-5 text-xs text-indigo-500 font-bold flex'>{getTotalNumber()} <span className='hidden md:block ml-1'>applied</span></div>
@@ -144,38 +165,42 @@ export function Filter({className, label}) {
                       ]}/>
                     <div className='md:h-[40vh] overflow-y-auto'>
                       <TabBar view={tabView} adapter={filterTabAdapter} defaultTab={0}>
-                        {filters.map(([label, items], i)=>
-                          <Tab key={i} id={i} label={label} number={selection[i] && selection[i].size}/>
+                        {objectMap(filters, (label, key)=>
+                          <Tab key={key} id={key} label={key} number={selection[key] && selection[key].size}/>
                         )}
                       </TabBar>
                     </div>
                   </div>
                   <div className='md:w-1/3 border-b py-2 md:border-b-0 md:py-0 md:border-r md:px-3 border-secondary-700'>
                     <TabView ref={tabView}>
-                      {filters.map(([a, items], i) => 
-                        <Tab key={i} id={i}>
-                          <InputField icon={faMagnifyingGlass} innerClassName='bg-secondary-900' label='Filter'
-                            addons={[
-                              <div className='flex text-xs text-secondary-600 py-1'>
-                                <div className='ml-auto mr-2 whitespace-nowrap'>Select all</div>
-                                <input type='checkbox' className='!ring-offset-0 h-4 w-4 rounded bg-secondary-700 border-0 focus:outline-none' 
-                                  onChange={(e)=>setSelection({type:(e.target.checked?'scf':'ucf'), i})}
-                                  checked={selection[i] && selection[i].size === filters[i][1].length}/>
+                      {objectMap(filters, (items, key) => 
+                        {
+                          if(typeof items == 'object'){
+                            return <Tab key={key} id={key}>
+                              <InputField icon={faMagnifyingGlass} innerClassName='bg-secondary-900' label='Filter'
+                                addons={[
+                                  <div className='flex text-xs text-secondary-600 py-1'>
+                                    <div className='ml-auto mr-2 whitespace-nowrap'>Select all</div>
+                                    <input type='checkbox' className='!ring-offset-0 h-4 w-4 rounded bg-secondary-700 border-0 focus:outline-none'
+                                      onChange={(e) => setSelection({ type: (e.target.checked ? 'scf' : 'ucf'), key })}
+                                      checked={selection[key] && selection[key].size === filters[key].length} />
+                                  </div>
+                                ]}
+                              />
+                              <div className='md:h-[40vh] overflow-y-auto'>
+                                {items.map((label, j) =>
+                                  <div key={j} className='flex items-center space-x-2 text-sm px-3 py-1 my-1 text-secondary-500 hover:text-white rounded duration-200 hover:bg-secondary-700 group'>
+                                    <input type='checkbox' className='!ring-offset-0 h-4 w-4 rounded bg-secondary-900 border-0 focus:outline-none'
+                                      onChange={(e) => setSelection({ type: (e.target.checked ? 'sf' : 'uf'), key, label })}
+                                      checked={selection[key] && selection[key].has(label)}
+                                    />
+                                    <div>{label}</div>
+                                  </div>
+                                )}
                               </div>
-                            ]}
-                          />
-                          <div className='md:h-[40vh] overflow-y-auto'>
-                          {items.map((label, j) => 
-                            <div key={j} className='flex items-center space-x-2 text-sm px-3 py-1 my-1 text-secondary-500 hover:text-white rounded duration-200 hover:bg-secondary-700 group'>
-                              <input type='checkbox' className='!ring-offset-0 h-4 w-4 rounded bg-secondary-900 border-0 focus:outline-none'
-                               onChange={(e)=>setSelection({type:(e.target.checked?'sf':'uf'), i,j})}
-                               checked={selection[i] && selection[i].has(j)}
-                               />
-                              <div>{label}</div>
-                            </div>
-                          )}
-                          </div>
-                        </Tab>
+                            </Tab>
+                          }
+                        }
                       )}
                     </TabView>
                   </div>
@@ -198,9 +223,10 @@ export function Filter({className, label}) {
                     </div>
                   </div>
                 </div>
-                <div className='flex mt-auto'>
+                <div className='flex mt-auto items-end'>
                   <InputField className='w-full md:w-auto md:ml-auto' type='date' label="From date" icon={faCalendar} innerClassName="bg-secondary-900 !p-0.5" />
                   <InputField className='w-full md:w-auto ml-3' type='date' label="To date" icon={faCalendar}  innerClassName="bg-secondary-900 !p-0.5" />
+                  <Button className='ml-3 primary-btn h-fit' onClick={apply}>Apply</Button>
                 </div>
               </div>
             </Popover.Panel>

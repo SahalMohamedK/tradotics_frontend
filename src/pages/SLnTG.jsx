@@ -9,6 +9,8 @@ import Slider from '../components/Slider';
 import Insightes from '../elements/Insightes';
 import ValueCard from '../elements/ValueCard';
 import ProgressCard from '../elements/ProgressCard';
+import { useEffect } from 'react';
+import { useUI } from '../contexts/UIContext';
 
 function SLnTG() {
     let data1 = lineChartData();
@@ -22,8 +24,14 @@ function SLnTG() {
     let [riskInputValue, setRiskInputValue] = useState(0);
     let [score, setScore] = useState(5.4);
 
+    const { setIsLoading } = useUI()
+
     let stoplessSlider = useRef()
     let targetSlider = useRef()
+
+    useEffect(() => {
+        setIsLoading(false)
+    })
 
     return (
         <div className='mt-16'>

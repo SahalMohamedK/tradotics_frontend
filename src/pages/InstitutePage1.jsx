@@ -1,12 +1,18 @@
 import { faPlusCircle, faUsers } from '@fortawesome/free-solid-svg-icons'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { institutePage1TableAdapter, instituteRuelsTableAdapter, simpleTableAdapter } from '../adapters/table'
 import Card from '../components/Card'
 import IconBtn from '../components/IconBtn'
 import SelectField from '../components/SelectField'
 import Table from '../components/Table'
+import { useUI } from '../contexts/UIContext'
 
 export default function InstitutePage1() {
+  const { setIsLoading } = useUI()
+
+  useEffect(() => {
+    setIsLoading(false)
+  }, [])
   return (
     <div className='pt-16 h-full flex flex-col'>
       <Card innerClassName='flex items-center mb-2'>

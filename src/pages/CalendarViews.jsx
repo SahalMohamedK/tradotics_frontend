@@ -1,8 +1,9 @@
 import { faCircleArrowLeft, faCircleArrowRight, faUpRightAndDownLeftFromCenter } from '@fortawesome/free-solid-svg-icons'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useState } from 'react'
 import Card from '../components/Card'
 import IconBtn from '../components/IconBtn'
+import { useUI } from '../contexts/UIContext'
 import { DAYS, MONTHS } from '../libs/consts'
 import { classNames } from '../utils'
 
@@ -88,6 +89,12 @@ function SmallCalendar({year, month, markers = {}}){
 
 export default function CalendarViews() {
   const [year, setYear] = useState((new Date()).getFullYear())
+
+  const { setIsLoading } = useUI()
+
+  useEffect(() => {
+    setIsLoading(false)
+  }, [])
 
   return (
     <div className='mt-16'>

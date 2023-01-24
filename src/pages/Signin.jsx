@@ -10,45 +10,47 @@ import { useAPI } from '../contexts/APIContext'
 import { useNavigate } from 'react-router-dom';
 import Button from '../components/Button'
 import Header from '../elements/Header'
+import { Form } from '../utils'
 
 export default function Signin() {
     const [isSignin, setIsSignin] = useState(false)
 
+
+    const { signin, isSigned, getUser } = useAPI()
+    const { toast, setIsLoading } = useUI()
+    const navigate = useNavigate()
+
     let emailRef = useRef()
     let passwordRef = useRef()
 
-    const {signin, isSigned, getUser} = useAPI()
-    const { toast, setIsLoading} = useUI()
-    const navigate = useNavigate()
+    let form = new Form()
 
-    function onClick(){
+    function onClick() {
         setIsSignin(true)
-        let email = emailRef.current.getValue()
-        let password = passwordRef.current.getValue()
-
-        if(email && password){
-            signin(email, password).then((response) => {
-                toast.success('Welcome back!','You have successfully logged into Tradotics.')
+        if (form.isValid()) {
+            signin(form.get()).then((response) => {
+                toast.success('Welcome back!', 'You have successfully logged into Tradotics.')
                 setIsSignin(false)
             }).catch((err) => {
-                if(err.code === "ERR_NETWORK"){
-                    toast.error('Server error!','Somthing went wrong. Check your internet connection.')
-                }else if(err.code === "ERR_BAD_REQUEST"){
-                    toast.error('Incorrect credentials!','You are given incorrect Email/Password.')
-                }else{
-                    toast.error('Somthing went wrong!','You need to try sometimes.')
+                if (err.code === "ERR_NETWORK") {
+                    toast.error('Server error!', 'Somthing went wrong. Check your internet connection.')
+                } else if (err.code === "ERR_BAD_REQUEST") {
+                    toast.error('Incorrect credentials!', err.message)
+                    form.error(err.response.data)
+                } else {
+                    toast.error('Somthing went wrong!', 'You need to try sometimes.')
                 }
                 setIsSignin(false)
             })
-        }else{
+        } else {
             setIsSignin(false)
         }
     }
 
     useEffect(() => {
-        if(isSigned){
+        if (isSigned) {
             navigate('/dashboard');
-        }else if(isSigned === false){
+        } else if (isSigned === false) {
             setIsLoading(false)
         }
     }, [isSigned])
@@ -64,10 +66,10 @@ export default function Signin() {
                             {/* <div className='text-sm text-secondary-500'>Don't have an account? <Link className='text-indigo-500' to='/signup'>Signup</Link></div> */}
                             <div className='text-sm text-secondary-500'>Don't have an account? <Link className='text-indigo-500' to='/early-access'>Apply for early access</Link></div>
                             <div className='text-left my-5'>
-                                <InputField ref={emailRef} className='mb-2' label='Email' icon={faUser} 
-                                    disabled={isSignin} onEnter={onClick} required/>
-                                <InputField ref={passwordRef} label='Password' icon={faLock} type='password' 
-                                    disabled={isSignin} onEnter={onClick} required/>
+                                <InputField ref={form.ref} className='mb-2' label='Email' icon={faUser}
+                                    disabled={isSignin} onEnter={onClick} required />
+                                <InputField ref={form.ref} label='Password' icon={faLock} type='password'
+                                    disabled={isSignin} onEnter={onClick} required />
                             </div>
                             <div className='w-fit mx-auto pt-3'>
                                 <Button className='w-full primary-btn' onClick={onClick} loading={isSignin}>Signin</Button>

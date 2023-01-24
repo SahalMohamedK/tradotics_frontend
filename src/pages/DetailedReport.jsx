@@ -10,6 +10,8 @@ import Card from '../components/Card'
 import Table from '../components/Table'
 import RateCard from '../elements/RateCard'
 import ValueCard from '../elements/ValueCard'
+import { useEffect } from 'react';
+import { useUI } from '../contexts/UIContext';
 
 export default function DetailedJournal() {
     let data = [
@@ -89,6 +91,12 @@ export default function DetailedJournal() {
     let tabView2 = useRef()
     let tabView3 = useRef()
     let optionsTable = useRef()
+
+    const { setIsLoading } = useUI()
+
+    useEffect(() => {
+        setIsLoading(false)
+    }, [])
 
     return (
         <div className='pt-16 h-full'>

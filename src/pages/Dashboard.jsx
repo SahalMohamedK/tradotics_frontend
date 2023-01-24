@@ -17,6 +17,7 @@ import BarGraphCard from '../elements/BarGraphCard'
 import { useAPI } from '../contexts/APIContext';
 import { useNavigate } from 'react-router-dom';
 import { useUI } from '../contexts/UIContext';
+import { useFilter } from '../contexts/FilterContext';
  
 function Dashboard() {  
     let data2 = doughnutChartData(['53 Wins', '15 Losses'],[300, 60])
@@ -26,11 +27,37 @@ function Dashboard() {
     const [dialyPLData, setDialyPLData] = useState(barGraphData(['09 Aug 22', '09 Aug 22', '09 Aug 22','09 Aug 22', '09 Aug 22','09 Aug 22', '09 Aug 22'], [50,-300,300,600,400, 500, -200]))
     const [cumulativePLData, setCumulativePLData] = useState(areaGraphData(['09:24', '', '', '', '10:07'], [0,100,400,100,300]))
 
-    let tabView = useRef()
+    const [start, setStart] = useState(0)
+    const [limit, setLimit] = useState(25)
 
-    const { isSigned, isFirstSigned, user } = useAPI()
-    const { toast, setIsLoading} = useUI()
+    let tabView = useRef()
+    let tradeTable = useRef()
+
+    const { isSigned, isFirstSigned, getOutputTrades } = useAPI()
+    const { toast, setIsLoading } = useUI()
+    const { filters } = useFilter()
     const navigate = useNavigate()
+
+    function showNextTrades(){
+        setStart(start+limit)
+    }
+
+    useEffect(() => {
+       showTrades()
+    }, [start, filters])
+
+    function showTrades(){
+        tradeTable.current.removeAll()
+        getOutputTrades(filters).then(response => {
+            let trades = response.data
+            for(var i in trades){
+                let trade = trades[i]
+                tradeTable.current.add(trade.status, trade.date, trade.symbol, trade.net_pnl, trade.roi, 1, 40, 'Fib', trade.entry_time, 1203.00, trade.exit_time, 1203.00)
+            }
+        }).catch(err => {
+            console.log(err)
+        })
+    }
 
     useEffect(() => {
         if(isSigned === false){
@@ -41,7 +68,6 @@ function Dashboard() {
         }else if(isSigned){
             setIsLoading(false)
         }
-        setIsLoading(false)
     }, [isSigned, isFirstSigned])
 
     return (
@@ -119,25 +145,11 @@ function Dashboard() {
             </Card>
             <Card className='w-full lg:w-3/4 order-3 md:order-4 lg:order-3'>
                 <div className='overflow-auto h-96'>
-                    <Table headers={['Status','Date', 'Symbol', 'Net P&L', 'ROI', 'Side', 'Volume', 'Setup', 'Entry time', 'Entry price', 'Exit time', 'Exit price']}
+                    <Table ref={tradeTable} headers={['Status','Date', 'Symbol', 'Net P&L', 'ROI', 'Side', 'Volume', 'Setup', 'Entry time', 'Entry price', 'Exit time', 'Exit price']}
                             adapter={dashboardTableAdapter} onChange={(data) => setExecutionsNumber(data.length)}
-                            onClick={()=>{}}
-                            data={[
-                                [1, 'Aug 08 2022', 'RELIANCE', 510.00, '0.93%', 0, 40, 'Fib', '09:41:54', 1203.00,'09:41:54', 1204.00],
-                                [0, 'Aug 08 2022', 'RELIANCE', 510.00, '0.93%', 1, 40, 'Fib', '09:41:54', 1203.00,'09:41:54', 1203.00],
-                                [1, 'Aug 08 2022', 'RELIANCE', 510.00, '0.93%', 0, 40, 'Fib', '09:41:54', 1203.00,'09:41:54', 1204.00],
-                                [0, 'Aug 08 2022', 'RELIANCE', 510.00, '0.93%', 1, 40, 'Fib', '09:41:54', 1203.00,'09:41:54', 1203.00],
-                                [1, 'Aug 08 2022', 'RELIANCE', 510.00, '0.93%', 0, 40, 'Fib', '09:41:54', 1203.00,'09:41:54', 1204.00],
-                                [0, 'Aug 08 2022', 'RELIANCE', 510.00, '0.93%', 1, 40, 'Fib', '09:41:54', 1203.00,'09:41:54', 1203.00],
-                                [1, 'Aug 08 2022', 'RELIANCE', 510.00, '0.93%', 0, 40, 'Fib', '09:41:54', 1203.00,'09:41:54', 1204.00],
-                                [0, 'Aug 08 2022', 'RELIANCE', 510.00, '0.93%', 1, 40, 'Fib', '09:41:54', 1203.00,'09:41:54', 1203.00],
-                                [1, 'Aug 08 2022', 'RELIANCE', 510.00, '0.93%', 0, 40, 'Fib', '09:41:54', 1203.00,'09:41:54', 1204.00],
-                                [0, 'Aug 08 2022', 'RELIANCE', 510.00, '0.93%', 1, 40, 'Fib', '09:41:54', 1203.00,'09:41:54', 1203.00],
-                                [1, 'Aug 08 2022', 'RELIANCE', 510.00, '0.93%', 0, 40, 'Fib', '09:41:54', 1203.00,'09:41:54', 1204.00],
-                                [0, 'Aug 08 2022', 'RELIANCE', 510.00, '0.93%', 1, 40, 'Fib', '09:41:54', 1203.00,'09:41:54', 1203.00],
-                            ]}/>
+                            onClick={()=>{}}/>
                 </div>
-                <div className='mt-2 text-xs text-center text-secondary-500'>Showing {executionsNumber} execution{executionsNumber>1?'s':''}. <a className='text-indigo-500' href="/trades">View all</a></div>
+                <div className='mt-2 text-xs text-center text-secondary-500'>Showing {executionsNumber} execution{executionsNumber > 1 ? 's' : ''}. <a className='text-indigo-500' href="/trades">View all</a><button onClick={showNextTrades}>next</button></div>
             </Card>
             <Insightes className='w-full md:w-1/2 lg:w-1/4 order-4 md:order-2 lg:order-4' items={[
                 'Profit is maximum at 0.6% stopless and 1.4% target.',

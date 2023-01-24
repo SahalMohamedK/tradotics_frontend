@@ -1,14 +1,21 @@
 import { faCoins, faPercentage, faSackDollar, faSackXmark, faZap } from '@fortawesome/free-solid-svg-icons'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import ProgressCard from '../elements/ProgressCard'
 import RateCard from '../elements/RateCard'
 import ValueCard from '../elements/ValueCard'
 import Card from '../components/Card'
 import Table from '../components/Table'
 import { dashboardTableAdapter } from '../adapters/table'
+import { useUI } from '../contexts/UIContext'
 
 export default function Trades() {
     const [executionsNumber, setExecutionsNumber] = useState(0)
+
+    const { setIsLoading } = useUI()
+
+    useEffect(() => {
+        setIsLoading(false)
+    }, [])
 
     return (
         <div className='pt-16 h-[96vh]'> 

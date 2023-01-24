@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { DAYS, MONTHS } from '../libs/consts';
 import { Doughnut, Line } from 'react-chartjs-2'
 import { simpleTabAdapter } from '../adapters/tabs';
@@ -15,6 +15,7 @@ import ProgressCard from '../elements/ProgressCard'
 import BarGraphCard from '../elements/BarGraphCard'
 import IconBtn from '../components/IconBtn';
 import { dashboardTableAdapter } from '../adapters/table';
+import { useUI } from '../contexts/UIContext';
  
 function InstituteDashboard() {  
     let data2 = doughnutChartData(['53 Wins', '15 Losses'],[300, 60])
@@ -26,6 +27,12 @@ function InstituteDashboard() {
 
     let table = useRef()
     let tabView = useRef()
+
+    const { setIsLoading } = useUI()
+
+    useEffect(() => {
+        setIsLoading(false)
+    }, [])
 
     return (
         <div className='md:flex flex-wrap mt-16'>

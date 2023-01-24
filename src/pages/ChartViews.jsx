@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useRef } from 'react'
 import { simpleTabAdapter } from '../adapters/tabs'
 import Card from '../components/Card'
@@ -6,11 +6,18 @@ import TradingViewWidget, { Themes } from 'react-tradingview-widget';
 import { Tab, TabBar, TabView } from '../components/Tab'
 import IconBtn from '../components/IconBtn';
 import { faEdit, faTrash, faUpRightAndDownLeftFromCenter } from '@fortawesome/free-solid-svg-icons';
+import { useUI } from '../contexts/UIContext';
 
 export default function ChartView() {
     let tabView = useRef()
     let data = [1,2,3,4,5]
 
+
+    const { setIsLoading } = useUI()
+
+    useEffect(() => {
+        setIsLoading(false)
+    }, [])
     return (
         <div className='mt-16'>
             <TabBar className='flex mb-2 mx-2' view={tabView} adapter={simpleTabAdapter}>
