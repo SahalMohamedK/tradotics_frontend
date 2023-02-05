@@ -1,11 +1,15 @@
 import { faCircleArrowLeft, faCircleArrowRight, faUpRightAndDownLeftFromCenter } from '@fortawesome/free-solid-svg-icons'
 import React, { useEffect } from 'react'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Card from '../components/Card'
 import IconBtn from '../components/IconBtn'
+import { API_URL } from '../config'
+import { useAPI } from '../contexts/APIContext'
+import { useFilter } from '../contexts/FilterContext'
 import { useUI } from '../contexts/UIContext'
 import { DAYS, MONTHS } from '../libs/consts'
-import { classNames } from '../utils'
+import { classNames, round, zFill } from '../utils'
 
 function SmallCalendar({year, month, markers = {}}){
   function getCalender(m, y){
@@ -20,7 +24,7 @@ function SmallCalendar({year, month, markers = {}}){
                 let t = n;
                 let nm = m;
                 let ny = y;
-                let _class = 'bg-secondary-700';
+                let _class = 'bg-secondary-700 material';
                 if(n<=msd){
                     n = pmed+n;
                     if(m == 0){
@@ -29,7 +33,7 @@ function SmallCalendar({year, month, markers = {}}){
                     }else{
                         nm = m-1;
                     }
-                    _class = 'bg-secondary-800';
+                    _class = 'bg-secondary-800 material';
                     t = ''
                 }else if(n>msd && (n-msd)<=med){
                   n = n-msd;
@@ -42,24 +46,29 @@ function SmallCalendar({year, month, markers = {}}){
                         nm = m+1;
                     }
                     n = n-(med+msd);
-                    _class = 'bg-secondary-800'
+                    _class = 'bg-secondary-800 material'
                     t = ''
                 }
-
-                let marker = markers[`${n}-${nm+1}-${ny}`]
-                let amount = 0
-                let trades = 0
-                if(marker && t!=''){
-                    amount = marker[0]
-                    trades = marker[1]
-                    if(amount>=0){
-                        _class =  'text-white green-material z-10'
-                    }else{
-                        _class =  'text-white red-material z-10'
-                    }
+              let marker = markers[`${ny}-${zFill(nm + 1, 2)}-${zFill(n, 2)}`]
+              let trades = 0
+              let amount = 0
+                if(marker && t != ''){
+                  trades = marker[1]
+                  amount = marker[0]
+                  if(amount>=0){
+                      _class =  'text-white green-material z-10 group'
+                  }else{
+                      _class =  'text-white red-material z-10 group'
+                  }
                 }
-                cols.push(<div key={j} className={classNames('rounded-lg relative cursor-pointer h-7 md:w-full md:min-w-12 duration-200', _class)} 
-                    onClick={() => this.setDate(new Date(ny, nm, n))}>
+                cols.push(<div key={j} className={classNames('rounded-lg relative cursor-pointer h-7 md:w-full md:min-w-12 duration-200', _class)} >
+                    <div className={classNames('scale-0 group-hover:scale-100 duration-200 absolute bottom-[calc(100%+0.5rem)] h-center rounded-lg p-2',
+                      amount >= 0 ? 'green-material' : 'red-material')}>
+                      <div className={classNames('absolute h-2 w-2 rotate-45 h-center bottom-[0.75rem] translate-y-[200%]',
+                        amount >= 0 ? 'bg-green-800' : 'bg-red-800')}></div>
+                      <div>${round(Math.abs(amount), 2)}</div>
+                      <div className='whitespace-nowrap'> {trades} Trade{trades > 1 ? 's' : ''}</div>
+                    </div>
                     <span className='center duration-200'>{t}</span>
                 </div>);
             }
@@ -68,7 +77,7 @@ function SmallCalendar({year, month, markers = {}}){
         return rows;
 
     }
-
+    
   return (
     <Card>
       <div className='flex items-center font-bold justify-between'>
@@ -89,25 +98,51 @@ function SmallCalendar({year, month, markers = {}}){
 
 export default function CalendarViews() {
   const [year, setYear] = useState((new Date()).getFullYear())
+  const [markers, setMarkers] = useState({})
 
-  const { setIsLoading } = useUI()
+  const { setLoading } = useUI()
+  const { isSigned, isFirstSigned, post, getAuth } = useAPI()
+  const navigate = useNavigate()
+  const { filters } = useFilter()
+
+  function showData(){
+    post(API_URL + '/calender-views', filters, getAuth()).then(response => {
+      let data = response.data
+      setMarkers(data.tradesByDays)
+      setYear(parseInt(Object.keys(data.tradesByDays)[0].substring(0,4)))
+    }).catch(err => {
+      console.log(err)
+    })
+  }
 
   useEffect(() => {
-    setIsLoading(false)
-  }, [])
+    showData()
+  }, [filters])
+
+  useEffect(() => {
+    setLoading(true)
+    if (isSigned === false) {
+      navigate('/signin')
+    } else if (isSigned && isFirstSigned) {
+      navigate('/settings')
+      toast.info('Setup your profile', 'First you need to setup user user profile details.')
+    } else if (isSigned) {
+      setLoading(false)
+    }
+  }, [isSigned, isFirstSigned])
 
   return (
     <div className='mt-16'>
         <Card>
             <div className='w-fit mx-auto flex items-center space-x-5'>
-                <IconBtn icon={faCircleArrowLeft}/>
-                <div>2022</div>
-                <IconBtn icon={faCircleArrowRight}/>
+              <IconBtn icon={faCircleArrowLeft} onClick={() => setYear(year-1)}/>
+              <div>{year}</div>
+              <IconBtn icon={faCircleArrowRight} onClick={() => setYear(year + 1)} />
             </div>
         </Card>
         <div className='grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4'>
           {MONTHS.map((_, month) => 
-            <SmallCalendar key={month} year={year} month={month} markers={{'30-1-2022': [40, 3], '12-12-2022':[-90, 9]}}/>
+            <SmallCalendar key={month} year={year} month={month} markers={markers}/>
           )}
         </div>
     </div>

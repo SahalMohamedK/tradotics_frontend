@@ -1,6 +1,6 @@
 import React, {  Fragment, useEffect, useRef, useState } from 'react'
 import { useReducer } from 'react'
-import { classNames, isEmpty, objectMap } from '../utils'
+import { classNames, isEmpty, len, objectMap } from '../utils'
 import { filterTabAdapter } from '../adapters/tabs'
 import { TabBar, TabView, Tab } from '../components/Tab'
 import { Disclosure, Popover, Transition } from '@headlessui/react'
@@ -11,9 +11,7 @@ import Button from '../components/Button'
 import { useFilter } from '../contexts/FilterContext'
 import { useAPI } from '../contexts/APIContext'
 
-const initSelection = {}
-
-export function Filter({className, label}) {
+export function Filter({className, label, onFilterSet}) {
   
   const { setFilters } = useFilter()
   const { getFilters } = useAPI()
@@ -21,49 +19,49 @@ export function Filter({className, label}) {
 
   let buttonRef = useRef()
 
-  const selectionReducer =  (state, action) => {
+  let selectionReducer =  (state, action) => {
     switch (action.type) {
       case 'sf':
-        var { key, label } = action
-        if (state.hasOwnProperty(key)) {
-          state[key].add(label)
+        var { i, j } = action
+        if (state.hasOwnProperty(i)) {
+          state[i].add(j)
         } else {
-          state[key] = new Set([label])
+          state[i] = new Set([j])
         }
         break
       case 'uf':
-        var { key, label } = action
-        if (state.hasOwnProperty(key)) {
-          if (state[key].size > 1) {
-            state[key].delete(label)
+        var { i, j } = action
+        if (state.hasOwnProperty(i)) {
+          if (state[i].size > 1) {
+            state[i].delete(j)
           } else {
-            delete state[key]
+            delete state[i]
           }
         }
         break
       case 'scf':
-        var { key } = action
-        for (var j in filters[key]) {
-          state = selectionReducer(state, { type: 'sf', key, label })
+        var { i } = action
+        for (var j in filters[i][1]) {
+          state = selectionReducer(state, { type: 'sf', i, j})
         }
         break
       case 'ucf':
-        var { key } = action
-        for (var j in filters[key]) {
-          state = selectionReducer(state, { type: 'uf', key, label })
+        var { i } = action
+        for (var j in filters[i][1]) {
+          state = selectionReducer(state, { type: 'uf', i, j })
         }
         break
       case 'saf':
-        for (var key in filters) {
-          for (var label in filters[key]) {
-            state = selectionReducer(state, { type: 'sf', key, label })
+        for (var i in filters) {
+          for (var j in filters[i][1]) {
+            state = selectionReducer(state, { type: 'sf', i, j })
           }
         }
         break
       case 'uaf':
-        for (var key in filters) {
-          for (var label in filters[key]) {
-            state = selectionReducer(state, { type: 'uf', key, label })
+        for (var i in filters) {
+          for (var j in filters[i][1]) {
+            state = selectionReducer(state, { type: 'uf', i, j })
           }
         }
         break
@@ -71,7 +69,7 @@ export function Filter({className, label}) {
     return { ...state }
   }
 
-  const [selection, setSelection] = useReducer(selectionReducer, initSelection)
+  const [selection, setSelection] = useReducer(selectionReducer, {})
 
 
   let tabView = useRef()
@@ -86,32 +84,36 @@ export function Filter({className, label}) {
 
   function apply(){
     let converted = {}
-    for(var key in selection){
-      converted[key] = Array.from(selection[key])
+    for(var i in selection){
+      converted[i] = Array.from(selection[i])
     }
-    setFilters(converted)
+    if (onFilterSet){
+      onFilterSet(converted)
+    }else{
+      setFilters(converted)
+    }
     buttonRef.current.click()
   }
 
   function getSelected(){
     let selected =[]
-    for(let key in selection){
+    for(let i in selection){
       let category = []
-      selection[key].forEach((label) => {
+      selection[i].forEach((j) => {
         category.push(
-          <div key={label} className='text-sm py-1 border-l border-secondary-600 text-secondary-500 ml-3'>
-            <div>- {label}</div>
+          <div key={j} className='text-sm py-1 border-l border-secondary-600 text-secondary-500 ml-3'>
+            <div>- {filters[i][1][j]}</div>
           </div>
         )
       })
       if(category.length){
         selected.push(
-          <div key={key}>
+          <div key={i}>
             <Disclosure >
               {({open}) => (<>
                 <Disclosure.Button className='text-sm py-1 text-secondary-500 flex'>
                   <Icon className={classNames('ml-1 md:ml-0 duration-200', open?'rotate-180':'')} icon={faAngleDown} size='sm'/>
-                  {key}
+                  {filters[i][0]}
                 </Disclosure.Button>
                 <Disclosure.Panel>
                   {category}
@@ -128,8 +130,8 @@ export function Filter({className, label}) {
 
   function getTotalNumber(){
     var n = 0
-    for(var key in selection){
-      n+=selection[key].size
+    for(var i in selection){
+      n+=selection[i].size
     }
     return n
   }
@@ -163,44 +165,40 @@ export function Filter({className, label}) {
                           />
                         </div>
                       ]}/>
-                    <div className='md:h-[40vh] overflow-y-auto'>
+                    <div className='md:h-[40vh] overflow-y-auto mt-2'>
                       <TabBar view={tabView} adapter={filterTabAdapter} defaultTab={0}>
-                        {objectMap(filters, (label, key)=>
-                          <Tab key={key} id={key} label={key} number={selection[key] && selection[key].size}/>
+                        {objectMap(filters, ([label], i)=>
+                          <Tab key={i} id={i} label={label} number={selection[i] && selection[i].size}/>
                         )}
                       </TabBar>
                     </div>
                   </div>
                   <div className='md:w-1/3 border-b py-2 md:border-b-0 md:py-0 md:border-r md:px-3 border-secondary-700'>
                     <TabView ref={tabView}>
-                      {objectMap(filters, (items, key) => 
-                        {
-                          if(typeof items == 'object'){
-                            return <Tab key={key} id={key}>
-                              <InputField icon={faMagnifyingGlass} innerClassName='bg-secondary-900' label='Filter'
-                                addons={[
-                                  <div className='flex text-xs text-secondary-600 py-1'>
-                                    <div className='ml-auto mr-2 whitespace-nowrap'>Select all</div>
-                                    <input type='checkbox' className='!ring-offset-0 h-4 w-4 rounded bg-secondary-700 border-0 focus:outline-none'
-                                      onChange={(e) => setSelection({ type: (e.target.checked ? 'scf' : 'ucf'), key })}
-                                      checked={selection[key] && selection[key].size === filters[key].length} />
-                                  </div>
-                                ]}
-                              />
-                              <div className='md:h-[40vh] overflow-y-auto'>
-                                {items.map((label, j) =>
-                                  <div key={j} className='flex items-center space-x-2 text-sm px-3 py-1 my-1 text-secondary-500 hover:text-white rounded duration-200 hover:bg-secondary-700 group'>
-                                    <input type='checkbox' className='!ring-offset-0 h-4 w-4 rounded bg-secondary-900 border-0 focus:outline-none'
-                                      onChange={(e) => setSelection({ type: (e.target.checked ? 'sf' : 'uf'), key, label })}
-                                      checked={selection[key] && selection[key].has(label)}
-                                    />
-                                    <div>{label}</div>
-                                  </div>
-                                )}
+                      {objectMap(filters, ([label, options], i) => 
+                        <Tab key={i} id={i}>
+                          <InputField icon={faMagnifyingGlass} innerClassName='bg-secondary-900' label='Filter'
+                            addons={[
+                              <div className='flex text-xs text-secondary-600 py-1'>
+                                <div className='ml-auto mr-2 whitespace-nowrap'>Select all</div>
+                                <input type='checkbox' className='!ring-offset-0 h-4 w-4 rounded bg-secondary-700 border-0 focus:outline-none'
+                                  onChange={(e) => setSelection({ type: (e.target.checked ? 'scf' : 'ucf'), i })}
+                                  checked={selection[i] && len(selection[i]) === len(filters[i][1])} />
                               </div>
-                            </Tab>
-                          }
-                        }
+                            ]}
+                          />
+                          <div className='md:h-[40vh] overflow-y-auto mt-2'>
+                            {objectMap(options, (option, j) =>
+                              <div key={j} className='flex items-center space-x-2 text-sm px-3 py-1 my-1 text-secondary-500 hover:text-white rounded duration-200 hover:bg-secondary-700 group'>
+                                <input type='checkbox' className='!ring-offset-0 h-4 w-4 rounded bg-secondary-900 border-0 focus:outline-none'
+                                  onChange={(e) => setSelection({ type: (e.target.checked ? 'sf' : 'uf'), i, j })}
+                                  checked={selection[i] && selection[i].has(j)}
+                                />
+                                <div>{option}</div>
+                              </div>
+                            )}
+                          </div>
+                        </Tab>
                       )}
                     </TabView>
                   </div>

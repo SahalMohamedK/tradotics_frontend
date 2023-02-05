@@ -1,0 +1,33 @@
+export function currency(data, type = 'USD', animation = false) {
+    let formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: type })
+    return <div className={classNames(data >= 0 ? 'text-green-500' : 'text-red-500')}>{formatter.format(Math.abs(data))}</div>
+}
+
+export function percentage(data) {
+    return <div className={classNames(data >= 0 ? 'text-green-500' : 'text-red-500')}>{Math.abs(data)}%</div>
+}
+
+export function iconBtn(icon, onClick) {
+    return <IconBtn icon={icon} onClick={onClick} />
+}
+
+export function dual(data, positive, negative) {
+    return <div className={classNames('text-xs font-bold rounded px-2 py-0.5', data ? 'bg-green-500/25 text-green-500' : 'bg-red-500/25 text-red-500')}>
+        {data ? positive : negative}
+    </div>
+}
+
+export function secondaryBtn(text, onClick) {
+    return <div className='secondary-btn btn-secondary-700' onClick={onClick}>{text}</div>
+}
+
+export function primarybtn(text, onClick) {
+    return <div className='primary-btn' onClick={onClick}>{text}</div>
+}
+
+export function checkbox(text, onChange) {
+    if (text) {
+        return <div className="flex items-center space-x-2"><input type="checkbox" className="checkbox" onChange={onChange} /><div>{text}</div></div>
+    }
+    return <input type="checkbox" className="checkbox" onChange={onChange} />
+}

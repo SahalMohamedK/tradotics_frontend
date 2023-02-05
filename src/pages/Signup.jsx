@@ -10,10 +10,11 @@ import { useRef } from 'react'
 import { useState } from 'react'
 import { useAPI } from '../contexts/APIContext'
 import { Form } from '../utils'
+import Header from '../elements/Header'
 
 export default function Signup() {
     const [isSignup, setIsSignup] = useState()
-    const { setIsLoading, toast } = useUI()
+    const { setLoading, toast } = useUI()
     const { signup } = useAPI()
 
     let form = new Form()
@@ -44,22 +45,13 @@ export default function Signup() {
     }
 
     useEffect(() => {
-        setIsLoading(false)
+        setLoading(false)
     }, [])
 
     return (
         <div className='h-screen flex flex-col'>
-            <header className='border-white/0 text-white font-medium px-4 md:px-8 py-3' >
-                <div className='items-center flex'>
-                    <img src={logoImg} alt="" width='30' />
-                    <div className='ml-5 text-lg font-bold'>Tradotics</div>
-                    <Link className='ml-auto mr-10 hover:text-indigo-500' to=''>Home</Link>
-                    <Link className='hover:text-indigo-500' to='#tutorial'>Tutorial</Link>
-                    <Link className='ml-10 hover:text-indigo-500' to='#pricing'>Pricing</Link>
-                    <Link className='secondary-btn ml-auto mr-2' to='/signup'>Signup</Link>
-                    <Link className='primary-btn' to='/signin'>Signin</Link>
-                </div>
-            </header>
+            <Header />
+
             <div className='grow relative'>
                 <div className='center w-full md:w-1/2 lg:w-1/3'>
                     <Card className='mx-5 md:mx-0 text-center'>

@@ -39,7 +39,7 @@ export default function Sidebar() {
             <div className={classNames(collapsed?'grid grid-cols-2 mx-3 my-2':'hidden mt-24 md:block')}>
                 {items.map(([path, label, icon], i) => {
                         if(typeof(path) === 'object'){
-                            return <Disclosure as='div' className='overflow-hidden'>
+                            return <Disclosure key={i} as='div' className='overflow-hidden'>
                                     {({open}) => (<>
                                         <Disclosure.Button className='text-secondary-500 duration-200 flex items-center my-2 md:my-0 px-2 py-2 rounded-lg overflow-hidden whitespace-nowrap cursor-pointer w-full'>
                                             <Icon icon={icon}/>
@@ -69,7 +69,7 @@ export default function Sidebar() {
                                 </Disclosure>                            
                         }
                         return <Link to={path} key={i} className={classNames('duration-200 flex items-center my-2 md:my-3 px-2 py-2 rounded-lg overflow-hidden whitespace-nowrap cursor-pointer',
-                        location.pathname === path?'active-primary-material':'text-white md:text-secondary-500 hover:text-white')}
+                        location.pathname === path?'primary-material':'text-white md:text-secondary-500 hover:text-white')}
                         onClick={() => setCollaps(false)}>
                         <Icon icon={icon}/>
                         <div className='ml-1 font-bold text-sm md:ml-5 group-hover:ml-1 duration-100'>{label}</div>

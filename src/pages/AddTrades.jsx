@@ -1,30 +1,32 @@
 import React, { useRef, useState } from 'react'
 import { iconTabAdapter } from '../adapters/tabs'
 import { Tab, TabBar, TabView } from '../components/Tab'
-import { faClockRotateLeft, faDownload, faFile, faFilePen, faPlus, faPlusCircle, faRotate, faUserTie } from '@fortawesome/free-solid-svg-icons'
+import { faClockRotateLeft, faDownload, faFile, faFilePen, faPlusCircle, faRotate, faUserTie } from '@fortawesome/free-solid-svg-icons'
 import Card from '../components/Card'
 import IconBtn from '../components/IconBtn'
-import Collapse from '../components/Collapse'
 import InputField from '../components/InputField'
 import SelectField from '../components/SelectField'
 import AutocompleteField from '../components/AutocompleteField'
 import Icon from '../components/Icon'
 import { addTradeHistoryTableAdapter } from '../adapters/table'
+import { simpleTabAdapter } from '../adapters/tabs'
 import Table from '../components/Table'
 import { useEffect } from 'react'
 import { useUI } from '../contexts/UIContext'
 import FileField from '../components/FileField'
 import { useAPI } from '../contexts/APIContext'
 import Button from '../components/Button'
-import { Form } from '../utils'
+import { Form, hasValue } from '../utils'
 
 function AddTrades() {
     const [brockers, setBrockers] = useState([])
     const [isImportTradeUpload, setIsImportTradeUpload] = useState(false)
-    const { getBrockers, uploadImportTrade } = useAPI()
-    const { setIsLoading, toast } = useUI()
+    const { getBrockers, uploadImportTrade, getTradeHistories, deleteTradeHistory, downloadTradeHistory } = useAPI()
+    const { setLoading, toast, dialog } = useUI()
 
     let mainTV = useRef()
+    let tradeHistoryTable = useRef()
+    let manualTabView = useRef()
     let importTradeForm = new Form()
 
     let ENTRY_TYPES = ['Buy', 'Sell']
@@ -35,15 +37,61 @@ function AddTrades() {
             let data = importTradeForm.get()
             uploadImportTrade(data).then(response => {
                 toast.success("Upload successfully", "Your trade details is uploaded successfully.")
+                showTradeHistories()
                 setIsImportTradeUpload(false)
             }).catch(err => {
-                toast.error("Upload failed", "Your trade details is not uploaded.")
+                let error = 'Your trade details is not uploaded.'
+                let type = 'error'
+                let title = 'Upload failed'
+                if (err.response){
+                    error = hasValue(err.response.data.message, error)
+                    type = hasValue(err.response.data.type, type)
+                    title = hasValue(err.response.data.title, title)
+                }
+                if(type === 'warning'){
+                    toast.warning(title, error)
+                }else{
+                    toast.error(title, error)
+                }
                 setIsImportTradeUpload(false)
                 importTradeForm.error(err.response.data)
             })
         } else {
             setIsImportTradeUpload(false) 
         }
+    }
+
+    function downloadHistory(id){
+        downloadTradeHistory(id).then(response => {
+            toast.success('Download successfully', 'Your trade history is downloaded successfully.')
+        }).catch(err => {
+            toast.error('Download failed', 'Somthing went wrong')
+        })
+    }
+
+    function showTradeHistories() {
+        tradeHistoryTable.current.removeAll()
+        getTradeHistories().then(response => {
+            let tradeHistories = response.data
+            tradeHistories.forEach((tradeHistory) => {
+                tradeHistoryTable.current.add(tradeHistory.brocker.name, '-', tradeHistory.type, tradeHistory.created, tradeHistory.no_executions, tradeHistory.no_trades, tradeHistory.pk)
+            })
+        }).catch(err => {
+
+        }).finally(() => {
+            setLoading(false)
+        })
+    }
+
+    function deleteHistory(id){
+        dialog.confirm('Confirm delete', 'Are you sure to delete this trade history?', 'Delete', () => {
+            deleteTradeHistory(id).then(response => {
+                toast.success('Deleted successfully', 'Your trade history is deleted successfully')
+                showTradeHistories()
+            }).catch(err => {
+                toast.error('Deleted failed', 'Somthing went wrong')
+            })
+        })
     }
 
     useEffect(() => {
@@ -56,15 +104,16 @@ function AddTrades() {
         }).catch(err => {
 
         }).finally(() => {
-            setIsLoading(false)
+            showTradeHistories()
         })
     }, [])
 
     return (
         <div className='h-full pt-16'>
             <div className='md:flex md:space-x-2  h-full'>
-                <TabBar className='flex flex-wrap md:block mb-2 md:mb-0 mx-2 md:w-1/4 lg:w-1/5' view={mainTV} adapter={iconTabAdapter}>
-                    <Tab id='sync' icon={faRotate} label='Sync brocker' />
+                <TabBar className='flex flex-wrap md:block mb-2 md:mb-0 mx-2 md:w-1/4 lg:w-1/5' view={mainTV} 
+                    adapter={iconTabAdapter} defaultTab='sync'>
+                    <Tab id='sync' icon={faRotate} label='Sync brocker'/>
                     <Tab id='import' icon={faDownload} label='Import trades' />
                     <Tab id='manual' icon={faFilePen} label='Manual entry' />
                     <Tab id='history' icon={faClockRotateLeft} label='History' />
@@ -111,7 +160,7 @@ function AddTrades() {
                             <Button 
                                 className="primary-btn mb-1 mr-1" 
                                 onClick={_uploadImportTrade}
-                                isLoading={isImportTradeUpload}>
+                                loading={isImportTradeUpload}>
                                     Save
                             </Button>
                         </Card>
@@ -122,63 +171,59 @@ function AddTrades() {
                                 <Icon className='primary-material mr-2' icon={faFilePen} size='sm' />
                                 <div className='text-lg font-bold mr-auto'>Manual entry</div>
                             </div>
-                            <div className='mb-4'>
-                                <Collapse label='Add a trades' icon={faPlus}>
-                                    <Card className='mx-2 mt-2'>
-                                        <div className='flex'>
-                                            <SelectField className='w-1/3 mr-2' label='Asset type' values={['Type 1', 'Type 2']} />
-                                            <SelectField className='w-1/3 mr-2' label='Symbbol' values={['ASIANPAITS', 'RELIANCE']} />
-                                            <SelectField className='w-1/3 mr-2' label='Entry type' values={ENTRY_TYPES} />
-                                        </div>
-                                    </Card>
-                                    <div className='mx-3 mt-2 font-bold'>Entries</div>
-                                    <Card className='mx-2'>
-                                        <div className='flex'>
-                                            <InputField className='w-1/4 mr-2' label='Date' />
-                                            <InputField className='w-1/4 mr-2' label='Time' />
-                                            <InputField className='w-1/4 mr-2' label='Volume' />
-                                            <InputField className='w-1/4' label='Price' />
-                                        </div>
-                                        <IconBtn className='mt-2' icon={faPlusCircle} />
-                                    </Card>
-                                    <div className='mx-3 mt-2 font-bold'>Exits</div>
-                                    <Card className='mx-2 '>
-                                        <div className='flex'>
-                                            <InputField className='w-1/4 mr-2' label='Date' />
-                                            <InputField className='w-1/4 mr-2' label='Time' />
-                                            <InputField className='w-1/4 mr-2' label='Volume' />
-                                            <InputField className='w-1/4' label='Price' />
-                                        </div>
-                                        <IconBtn className='mt-2' icon={faPlusCircle} />
-                                    </Card>
-                                    <Card className='mx-2 mt-2'>
-                                        <div className='flex'>
-                                            <InputField className='w-1/4 mr-2' label='Stopless (optional)' />
-                                            <InputField className='w-1/4 mr-2' label='Target (optional)' />
-                                        </div>
-                                    </Card>
-                                    <div className='flex mt-2 mx-3'>
+                            <TabBar className='flex' adapter={simpleTabAdapter} view={manualTabView}>
+                                <Tab id='trade' label='Add a trade' />
+                                <Tab id='execution' label='Add an execution' />
+                            </TabBar>
+                            <TabView ref={manualTabView}>
+                                <Tab id='trade'>
+                                    <div className='flex mt-2'>
+                                        <SelectField className='w-1/3 mr-2' label='Asset type' values={['Type 1', 'Type 2']} />
+                                        <SelectField className='w-1/3 mr-2' label='Symbbol' values={['ASIANPAITS', 'RELIANCE']} />
+                                        <SelectField className='w-1/3 mr-2' label='Entry type' values={ENTRY_TYPES} />
+                                    </div>
+                                    <div className='mt-4 font-bold'>Entries</div>
+                                    <div className='flex'>
+                                        <InputField className='w-1/4 mr-2' label='Date' />
+                                        <InputField className='w-1/4 mr-2' label='Time' />
+                                        <InputField className='w-1/4 mr-2' label='Volume' />
+                                        <InputField className='w-1/4' label='Price' />
+                                    </div>
+                                    <IconBtn className='mt-2' icon={faPlusCircle} />
+                                    <div className='mt-4 font-bold'>Exits</div>
+                                    <div className='flex'>
+                                        <InputField className='w-1/4 mr-2' label='Date' />
+                                        <InputField className='w-1/4 mr-2' label='Time' />
+                                        <InputField className='w-1/4 mr-2' label='Volume' />
+                                        <InputField className='w-1/4' label='Price' />
+                                    </div>
+                                    <IconBtn className='mt-2' icon={faPlusCircle} />
+                                    <div className='flex mt-4'>
+                                        <InputField className='w-1/4 mr-2' label='Stopless (optional)' />
+                                        <InputField className='w-1/4 mr-2' label='Target (optional)' />
+                                    </div>
+                                    <div className='flex mt-4'>
                                         <button className='primary-btn mb-1 mr-1'>Save</button>
                                         <button className='secondary-btn mb-1 mr-1'>Disacard</button>
                                     </div>
-                                </Collapse>
-                            </div>
-                            <Collapse label='Add an execution' icon={faPlus}>
-                                <Card className='mx-2 mt-2 '>
-                                    <div className='flex flex-wrap'>
-                                        <div className='w-1/6'><SelectField className='mr-2' label='Asset type' values={['Type 1', 'Type 2']} /></div>
-                                        <div className='w-1/6'><InputField className='mr-2' label='Date' /></div>
-                                        <div className='w-1/6'><InputField className='mr-2' label='Time' /></div>
-                                        <div className='w-1/6'><SelectField className='mr-2' label='Entry type' values={ENTRY_TYPES} /></div>
-                                        <div className='w-1/6'><InputField className='mr-2' label='Volume' /></div>
-                                        <div className='w-1/6'><InputField className='mr-2' label='Price' /></div>
+                                </Tab>
+                                <Tab id='execution'>
+                                    <Card className='mt-2 '>
+                                        <div className='flex flex-wrap'>
+                                            <div className='w-1/6'><SelectField className='mr-2' label='Asset type' values={['Type 1', 'Type 2']} /></div>
+                                            <div className='w-1/6'><InputField className='mr-2' label='Date' /></div>
+                                            <div className='w-1/6'><InputField className='mr-2' label='Time' /></div>
+                                            <div className='w-1/6'><SelectField className='mr-2' label='Entry type' values={ENTRY_TYPES} /></div>
+                                            <div className='w-1/6'><InputField className='mr-2' label='Volume' /></div>
+                                            <div className='w-1/6'><InputField className='mr-2' label='Price' /></div>
+                                        </div>
+                                    </Card>
+                                    <div className='flex mt-2 mx-1'>
+                                        <button className='primary-btn mb-1 mr-1'>Save</button>
+                                        <button className='secondary-btn mb-1 mr-1'>Disacard</button>
                                     </div>
-                                </Card>
-                                <div className='flex mt-2 mx-3'>
-                                    <button className='primary-btn mb-1 mr-1'>Save</button>
-                                    <button className='secondary-btn mb-1 mr-1'>Disacard</button>
-                                </div>
-                            </Collapse>
+                                </Tab>
+                            </TabView>
                         </Card>
                     </Tab>
                     <Tab id='history'>
@@ -187,12 +232,8 @@ function AddTrades() {
                                 <Icon className='primary-material mr-2' icon={faClockRotateLeft} size='sm' />
                                 <div className='text-lg font-bold mr-auto'>History</div>
                             </div>
-                            <Table headers={['Brocker', 'Portfolio', 'Type', 'Upload date', 'Time', 'Executions', 'Trades', 'File']} adapter={addTradeHistoryTableAdapter}
-                                data={[
-                                    ['Zerodha', 'Zerodha', 'Sync', '12/12/22', '09:44:33', 42, 18, false],
-                                    ['Zerodha', 'Zerodha', 'Imported', '12/12/22', '09:44:33', 42, 18, true],
-                                    ['Zerodha', 'Zerodha', 'Manual', '12/12/22', '09:44:33', 42, 18, false],
-                                ]} />
+                            <Table ref={tradeHistoryTable} headers={['Brocker', 'Portfolio', 'Type', 'Created', 'Executions', 'Trades', '', '']} 
+                                adapter={addTradeHistoryTableAdapter} onDelete = {deleteHistory} onDownload = {downloadHistory}/>
                         </Card>
                     </Tab>
                 </TabView>

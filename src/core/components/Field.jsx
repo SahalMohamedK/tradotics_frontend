@@ -15,19 +15,32 @@ export class Field extends Component {
             value: hasValue(this.props.value, this.defaultValue),
             errors: [],
             focused: false,
+            ...(this.state ? this.state : {})
         }
 
         this.set = this.set.bind(this)
         this.get = this.get.bind(this)
         this.reset = this.reset.bind(this)
         this.error = this.error.bind(this)
+        this.onFocus = this.onFocus.bind(this)
+        this.onBlur = this.onBlur.bind(this)
         this.validate = this.validate.bind(this)
     }
 
     componentDidUpdate(prevProps) {
-        if (prevProps.value !== this.props.value) {
+        if (this.props.value && prevProps.value !== this.props.value) {
             this.setState({value: this.props.value})
         }
+    }
+
+    onFocus(){
+        this.setState({ focused: true })
+        if (this.props.onFocus) this.props.onFocus()
+    }
+
+    onBlur(){
+        this.setState({ focused: false })
+        if (this.props.onBlur) this.props.onBlur()
     }
 
     init(){

@@ -47,7 +47,7 @@ export default function Footer() {
                     Copyright &#169; 2023 <Link className='font-bold hover:text-indigo-500 duration-200'>Tradotics</Link> All Rights Reserved.
                 </div>
                 <div className='mt-4 md:mt-0 md:ml-auto'>
-                    Devele by <a href='https://www.instagram.com/inksignature/' className='font-bold hover:text-indigo-500 duration-200'>Ink Signature</a>. 
+                    Developed by <a href='https://www.instagram.com/inksignature/' className='font-bold hover:text-indigo-500 duration-200'>Ink Signature</a>. 
                 </div>
             </div>
         </footer>

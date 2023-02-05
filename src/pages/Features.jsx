@@ -35,10 +35,10 @@ const boxes12Data = [
 
 export default function Features() {
     const [scroll, setScroll] = useState(false)
-    const { setIsLoading } = useUI()
+    const { setLoading } = useUI()
 
     useEffect(() => {
-        setIsLoading(false)
+        setLoading(false)
     })
 
     return (

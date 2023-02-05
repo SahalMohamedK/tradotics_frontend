@@ -22,13 +22,14 @@ import DetailedReport from './pages/DetailedReport';
 import InstituteAdmin from './pages/InstituteAdmin';
 import InstituteDashboard from './pages/InstituteDashboard';
 import { Chart, registerables } from 'chart.js';
+import zoomPlugin from 'chartjs-plugin-zoom';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import EarlyAccess from './pages/EarlyAccess';
 import Page404 from './pages/Page404';
 import Test from './Test';
 import FilterProvider from './contexts/FilterContext';
 
-Chart.register(...registerables);
+Chart.register(zoomPlugin, ...registerables);
 
 function Wrapper({ children, filter = true }) {
   return (<>
@@ -51,8 +52,8 @@ function App() {
               <Routes>
                 <Route path='/test' element={<Test />} />
                 <Route path='/dashboard' element={<Wrapper><Dashboard /></Wrapper>} />
-                <Route path='/settings' element={<Wrapper><Settings /></Wrapper>} />
-                <Route path='/add-trades' element={<Wrapper><AddTrades /></Wrapper>} />
+                <Route path='/settings' element={<Wrapper filter={false}><Settings /></Wrapper>} />
+                <Route path='/add-trades' element={<Wrapper filter={false}><AddTrades /></Wrapper>} />
                 <Route path='/stopless-and-target' element={<Wrapper><SLnTG /></Wrapper>} />
                 
                 <Route path='/detailed-report' element={<Wrapper><DetailedReport/></Wrapper>} />
@@ -65,7 +66,7 @@ function App() {
                 <Route path='/institute-admin' element={<Wrapper><InstituteAdmin/></Wrapper>} /> 
                 <Route path='/institute-page1' element={<Wrapper><InstitutePage1/></Wrapper>} /> 
                 <Route path='/institute-dashboard' element={<Wrapper><InstituteDashboard/></Wrapper>} /> 
-                <Route path='/trade-analytics' element={<Wrapper><TradeAnalytics /></Wrapper>} />
+                <Route path='/trade-analytics/:id' element={<Wrapper><TradeAnalytics /></Wrapper>} />
                 <Route path='/chart-views' element={<Wrapper><ChartViews/></Wrapper>} />
                 <Route path='/signin' element={<Signin />} />
                 <Route path='/signup' element={<Signup />} />

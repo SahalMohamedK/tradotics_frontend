@@ -5,8 +5,10 @@ export function classNames(...classes) {
 
 export function objectMap(object, func) {
     let result = []
+    let i = 0
     for (let key in object) {
-        result.push(func(object[key], key))
+        result.push(func(object[key], key, i))
+        i+=1
     }
     return result
 }
@@ -130,6 +132,19 @@ export function toVar(s) {
         }
     }
     return varStr
+}
+
+export function round(num, digits){
+    return Math.round(num* Math.pow(10, digits)) / Math.pow(10, digits)
+}
+
+export function zFill(num, size) {
+    var s = "000000000" + num;
+    return s.substring(s.length - size);
+}
+
+export function len(obj){
+    return obj.size | obj.length | Object.keys(obj).length
 }
 
 export class Form {

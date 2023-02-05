@@ -8,6 +8,7 @@ import Dialog from '../components/Dialog'
 import IconBtn from '../components/IconBtn';
 import { journalDialogTableAdapter } from '../adapters/table';
 import { useUI } from '../contexts/UIContext';
+import { useAPI } from '../contexts/APIContext';
 
 export default function Journal() {
 
@@ -21,12 +22,21 @@ export default function Journal() {
         [75, 4, 255, 2.55, 3,1],
         [75, 4, 255, 2.55, 3,1],
     ]
-
-    const { setIsLoading } = useUI()
+    
+    const { setLoading } = useUI()
+    const { isSigned, isFirstSigned } = useAPI()
 
     useEffect(() => {
-        setIsLoading(false)
-    }, [])
+        setLoading(true)
+        if (isSigned === false) {
+            navigate('/signin')
+        } else if (isSigned && isFirstSigned) {
+            navigate('/settings')
+            toast.info('Setup your profile', 'First you need to setup user user profile details.')
+        } else if (isSigned) {
+            setLoading(false)
+        }
+    }, [isSigned, isFirstSigned])
 
   return (
     <div className='md:flex flex-wrap mt-16'>

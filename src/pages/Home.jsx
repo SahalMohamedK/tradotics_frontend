@@ -14,11 +14,11 @@ import Header from '../elements/Header'
 import Footer from '../elements/Footer'
 
 export default function Home() {
-    const { setIsLoading } = useUI();
+    const { setLoading } = useUI();
     let pricingSection = useRef()
 
     useEffect(() => {        
-        setIsLoading(false)
+        setLoading(false)
     }, [])
 
     return (

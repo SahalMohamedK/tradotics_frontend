@@ -42,7 +42,7 @@ export default function Navbar({ filter = true }) {
             leave="transition ease-in duration-75" leaveFrom="transform opacity-100 scale-100" leaveTo="transform opacity-0 scale-95">
             <Menu.Items className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-lg bg-secondary-800 shadow-lg material focus:outline-none">
               <div className="px-2 py-1">
-                <div className='m-2'>{user.firstName} {user.secondName}</div>
+                <div className='m-2'>{user.firstName} {user.lastName}</div>
                 <hr className='border-secondary-700' />
                 <Menu.Item>
                   {({ active }) =>

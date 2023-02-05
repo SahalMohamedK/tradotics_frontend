@@ -32,11 +32,23 @@ export default function APIProvider({ children }) {
         })
     }, [])
 
+    function post(url, ...args){
+        return axios.post(url, ...args)
+    }
+
+    function get(url, ...args){
+        return axios.get(url, ...args)
+    }
+
+    function put(url, ...args){
+        return axios.put(url, ...args)
+    }
+
     function getToken() {
         return localStorage.getItem('auth_token')
     }
 
-    function getConfig(headers) {
+    function getAuth(headers) {
         return {
             "headers": {
                 Authorization: `Token ${getToken()}`,
@@ -47,12 +59,12 @@ export default function APIProvider({ children }) {
     }
 
     function signup(data) {
-        return axios.post(API_URL + '/account/signup', data)
+        return post(API_URL + '/account/signup', data)
     }
 
     function signin(data) {
         return new Promise((resolver, reject) => {
-            axios.post(API_URL + '/account/signin', data).then((response) => {
+            post(API_URL + '/account/signin', data).then((response) => {
                 if (response.data.token) {
                     localStorage.setItem('auth_token', response.data.token)
                     getUser().then((response) => {
@@ -81,7 +93,7 @@ export default function APIProvider({ children }) {
 
     function signout() {
         return new Promise((resolver, reject) => {
-            axios.get(API_URL + '/account/signout', getConfig()).then(response => {
+            get(API_URL + '/account/signout', getAuth()).then(response => {
                 localStorage.removeItem('auth_token')
                 setUser({})
                 setIsSigned(false)
@@ -93,12 +105,12 @@ export default function APIProvider({ children }) {
     }
 
     function getUser() {
-        return axios.get(API_URL + '/account/profile', getConfig())
+        return get(API_URL + '/account/profile', getAuth())
     }
 
     function updateUser(data) {
         return new Promise((resolver, reject) => {
-            axios.put(API_URL + '/account/profile', data, getConfig()).then(response => {
+            put(API_URL + '/account/profile', data, getAuth()).then(response => {
                 setUser({ ...user, ...data })
                 resolver(response)
             }).catch(reject)
@@ -106,27 +118,56 @@ export default function APIProvider({ children }) {
     }
 
     function getBrockers() {
-        return axios.get(API_URL + '/brockers')
+        return get(API_URL + '/brockers')
     }
 
     function getBrockerDetails(id) {
-        return axios.get(API_URL + '/brocker/' + id)
+        return get(API_URL + '/brocker/' + id)
     }
 
     function addEarlyAccessUser(data) {
-        return axios.post(API_URL + '/account/early-access', data, { headers: { 'content-type': 'multipart/form-data' } })
+        return post(API_URL + '/account/early-access', data, { headers: { 'content-type': 'multipart/form-data' } })
     }
 
     function uploadImportTrade(data) {
-        return axios.post(API_URL + '/trades/import', data, getConfig({ 'content-type': 'multipart/form-data' }))
-    }
-
-    function getOutputTrades(data){
-        return axios.post(API_URL + '/trades/output', data, getConfig())
+        return post(API_URL + '/trades/import', data, getAuth({ 'content-type': 'multipart/form-data' }))
     }
 
     function getFilters(){
-        return axios.post(API_URL + '/trades/filters', {}, getConfig())
+        return post(API_URL + '/trades/filters', {}, getAuth())
+    }
+
+    function getTradeHistories(){
+        return get(API_URL+'/trades/histories', getAuth())
+    }
+
+    function deleteTradeHistory(id){
+        return axios.post(API_URL +'/trades/delete/histories', {'id': id}, getAuth())
+    }
+
+    function downloadTradeHistory(id){
+        return new Promise((resolver, reject) => {
+            get(API_URL + '/trades/history/' + id, getAuth()).then(response => {
+                let filedata = response.data.file
+                let filename = response.data.filename
+                const url = URL.createObjectURL(new Blob([filedata], { type: 'text/plain;charset=utf-8' }))
+                const link = document.createElement('a')
+                link.href = url
+                link.download = filename
+                document.body.appendChild(link)
+                link.click()
+                link.remove()
+
+                setTimeout(() => URL.revokeObjectURL(link.href), 7000);
+                resolver(response)
+            }).catch(err => {
+                reject(err)
+            })
+        })
+    }
+
+    function updateTrade(trade){
+        return post(API_URL+'/trade/update', {trade}, getAuth())
     }
 
     const value = {
@@ -139,8 +180,15 @@ export default function APIProvider({ children }) {
         getBrockerDetails,
         addEarlyAccessUser,
         uploadImportTrade,
-        getOutputTrades,
+        deleteTradeHistory,
+        downloadTradeHistory,
+        updateTrade,
         getFilters,
+        getTradeHistories, 
+        getAuth,
+        post,
+        get,
+        put,
         user,
         isFirstSigned,
         isSigned

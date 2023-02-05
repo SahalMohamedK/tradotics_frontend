@@ -20,8 +20,8 @@ export function filterTabAdapter(selected, {label, number = 0}){
     return <div className={classNames('flex items-center justify-between px-3 py-1 rounded duration-200 cursor-pointer text-sm my-1', 
         selected?'text-white bg-secondary-700':'text-secondary-500 hover:text-white')}>
         <div>{label}</div>
-        <div className={classNames("!h-5 !w-5 circle text-sm", selected?"bg-secondary-800":"bg-secondary-700")}>
-            <div className="center">{number}</div>
+        <div className={classNames("rounded-full text-sm px-2", selected?"bg-secondary-800":"bg-secondary-700")}>
+            {number}
         </div>
     </div>
 }

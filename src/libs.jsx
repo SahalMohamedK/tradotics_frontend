@@ -5,11 +5,12 @@ let textFont = {size:10, weight: 700}
 let redColor = '#ef4444';
 let greenColor = '#22c55e'
 let primaryColor = '#6366f1'
+let blueColor = '#1c64f2';
+let yellowColor = '#eab308'
 
 let greenGradient = [[0, hexToRgba(greenColor, 0)], [1, greenColor]]
 let redGradient = [[0, redColor], [1, hexToRgba(redColor, 0)]]
 let primaryGradient = [[0, hexToRgba(primaryColor, 0)], [0.2, hexToRgba(primaryColor, 0.1)], [1, hexToRgba(primaryColor, 0.50)]]
-let blueColor = '#1c64f2';
 let blueLightColor = 'rgba(28, 100, 242, 0.5)';
 let opacity0 = 'rgba(0,0,0,0)'
 
@@ -43,8 +44,12 @@ function segmentColors(...segments){
                 segments.forEach(([start, end, color]) => {
                     start = 1-(start === null ? height: scales.y.getPixelForValue(start)-top)/height
                     end = 1-(end === null ? 0: scales.y.getPixelForValue(end)-top)/height
-                    if(start>0) gradient.addColorStop(start, color)
-                    if(end>0) gradient.addColorStop(end, color)
+                    start = start > 1 ? 1 : start
+                    start = start < 0 ? 0 : start
+                    end = end > 1 ? 1 : end
+                    end = end < 0 ? 0 : end
+                    gradient.addColorStop(start, color)
+                    gradient.addColorStop(end, color)
                     prevColor = color
                 })
                 return gradient
@@ -162,6 +167,17 @@ export const areaGraphOptions = {
     plugins: {
         legend:{
             display: false
+        },
+        zoom: {
+            zoom: {
+                wheel: {
+                    enabled: true,
+                },
+                drag: {
+                    enabled: true
+                },
+                mode: 'xy',
+            }
         }
     },
     scales: {
@@ -196,7 +212,39 @@ export function areaGraphData(labels, data){
             borderColor: segmentColors([null, 0, redColor], [0,null, greenColor]),
             pointHoverRadius: 10,
             pointRadius: 4
-        }]
+        },
+            // {
+            //     data: [0, 300, -300, -600, -400],
+            //     fill: true,
+            //     backgroundColor: segmentColors([null, 0, hexToRgba(primaryColor, 0.3)], [0, null, hexToRgba(greenColor, 0.3)]),
+            //     borderColor: segmentColors([null, 0, primaryColor], [0, null, greenColor]),
+            //     pointHoverRadius: 10,
+            //     pointRadius: 4
+            // }
+        ]
+    }
+}
+
+export function areaGraphDoubleData(labels, data1, data2) {
+    return {
+        labels: labels,
+        datasets: [{
+            data: data1,
+            fill: true,
+            backgroundColor: segmentColors([null, 0, hexToRgba(redColor, 0.3)], [0, null, hexToRgba(greenColor, 0.3)]),
+            borderColor: segmentColors([null, 0, redColor], [0, null, greenColor]),
+            pointHoverRadius: 10,
+            pointRadius: 4
+        },
+        {
+            data: data2,
+            fill: true,
+            backgroundColor: segmentColors([null, 0, hexToRgba(yellowColor, 0.3)], [0, null, hexToRgba(blueColor, 0.3)]),
+            borderColor: segmentColors([null, 0, yellowColor], [0, null, blueColor]),
+            pointHoverRadius: 10,
+            pointRadius: 4
+        }
+        ]
     }
 }
 

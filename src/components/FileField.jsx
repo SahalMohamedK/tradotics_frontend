@@ -30,7 +30,7 @@ export class FileField extends Component {
     }
 
     isValid() {
-        let value = this.getValue()
+        let value = this.get()
         return value !== undefined
     }
 

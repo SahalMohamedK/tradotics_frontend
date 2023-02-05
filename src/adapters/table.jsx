@@ -4,9 +4,9 @@ import { classNames} from "../utils";
 import RatioBar from "../components/RatioBar";
 import SwitchBtn from "../components/SwitchBtn";
 
-function currency(data, type = 'USD'){
+function currency(data, color = true,  type = 'USD'){
     let formatter = new Intl.NumberFormat('en-US', {style: 'currency', currency: type})
-    return <div className={classNames(data>=0?'text-green-500':'text-red-500')}>{formatter.format(Math.abs(data))}</div>
+    return <div className={classNames(color? data>=0?'text-green-500':'text-red-500':'')}>{formatter.format(Math.abs(data))}</div>
 }
 
 function percentage(data){
@@ -38,14 +38,18 @@ function checkbox(text, onChange){
     return <input type="checkbox" className="checkbox" onChange={onChange}/>
 }
 
+function dateTime(d){
+    return (new Date(d)).toUTCString()
+}
+
 export var simpleTableAdapter = (table, ...items) => items
 
-export function addTradeHistoryTableAdapter(table, brocker, portfolio, type, upload_date, time, executions, trades , file){
-    return [brocker, portfolio, type, upload_date, time, executions, trades, file?iconBtn(faDownload):'']
+export function addTradeHistoryTableAdapter(table, brocker, portfolio, type, created, executions, trades, id ){
+    return [brocker, portfolio, ['Import', 'Sync', 'manula'][type], dateTime(created), executions, trades, iconBtn(faDownload, () => table.props.onDownload(id)), iconBtn(faTrash, () => table.props.onDelete(id))]
 }
 
 export function dashboardTableAdapter(table, status, date, symbol, netPL, ROI, side, volume, setup, entryTime, entryPrice, exitTime, exitPrice){
-    return [dual(status, 'Win', 'Loss'), date, symbol, currency(netPL), ROI, dual(side, 'Long', 'Short'), volume, setup, entryTime, currency(entryPrice), exitTime, currency(exitPrice)]
+    return [dual(status, 'Win', 'Loss'), date, symbol, currency(netPL), percentage(ROI), dual(side == 'buy', 'Long', 'Short'), volume, setup, entryTime, currency(entryPrice), exitTime, currency(exitPrice)]
 }
 
 export function dashboardOpenPositionsTableAdapter(table, entryData, symbol, side, volume){
@@ -53,11 +57,11 @@ export function dashboardOpenPositionsTableAdapter(table, entryData, symbol, sid
 }
 
 export function detailedJournelTableAdapter(table, status, date, symbol, netPL, ROI, side){
-    return [dual(status, 'Win', 'Loss'), date, symbol, currency(netPL), percentage(ROI), dual(side, 'Long', 'Short')]
+    return [dual(status, 'Win', 'Loss'), date, symbol, currency(netPL), percentage(ROI), dual(side == 'buy', 'Long', 'Short')]
 }
 
-export function detailedJournelOptionsTableAdapter(table, type, netPL, no, volume, winrate){
-    return [type, currency(netPL), no, volume, <RatioBar value={winrate} positiveValue={68} negativeValue={32} />]
+export function detailedJournelOptionsTableAdapter(table, type, netPL, no, cost, winrate){
+    return [type, currency(netPL), no, currency(cost), <RatioBar value={winrate} positiveValue={68} negativeValue={32} />]
 }
 
 export function journalDialogTableAdapter(table, entryTime, exitTime, symbol, side, volume,netPL, ROI, RR){
@@ -65,7 +69,7 @@ export function journalDialogTableAdapter(table, entryTime, exitTime, symbol, si
 }
 
 export function executionsTableAdapter(table, date, time, side, price, quantity, position, value, PL, editOnClick){
-    return [date, time, dual(side, 'Buy','Sell'),currency(price), quantity, position, value, currency(PL), iconBtn(faTrash, () => table.remove(key)), iconBtn(faEdit, editOnClick)]
+    return [date, time, dual(side == 'buy', 'Buy', 'Sell'), currency(price, false), quantity, position, currency(value, false), currency(PL), iconBtn(faTrash, () => table.remove(key)), iconBtn(faEdit, editOnClick)]
 }
 
 export function instituteGroupTable(table, sNo, name, winrate, profitFactor){

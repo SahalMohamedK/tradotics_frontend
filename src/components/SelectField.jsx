@@ -9,7 +9,6 @@ export class SelectField extends Component {
         super(props);
 
         this.defaultValue = hasValue(this.props.defaultValue, hasValue(this.props.value, 0))
-
         this.state = {
             value: this.defaultValue,
             error: '',

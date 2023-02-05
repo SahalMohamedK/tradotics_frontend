@@ -17,7 +17,7 @@ export default function Signin() {
 
 
     const { signin, isSigned, getUser } = useAPI()
-    const { toast, setIsLoading } = useUI()
+    const { toast, setLoading } = useUI()
     const navigate = useNavigate()
 
     let emailRef = useRef()
@@ -49,9 +49,10 @@ export default function Signin() {
 
     useEffect(() => {
         if (isSigned) {
+            toast.success('Signin successfully', 'You are already signed in.')
             navigate('/dashboard');
         } else if (isSigned === false) {
-            setIsLoading(false)
+            setLoading(false)
         }
     }, [isSigned])
 

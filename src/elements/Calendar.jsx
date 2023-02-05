@@ -2,7 +2,7 @@ import { faCalendarDay, faChevronCircleLeft, faChevronCircleRight } from '@forta
 import React, { Component } from 'react'
 import IconBtn from '../components/IconBtn';
 import SelectField from '../components/SelectField'
-import { addItem, classNames, hasValue, strDate } from '../utils';
+import { addItem, classNames, hasValue, strDate, zFill } from '../utils';
 import { MONTHS, YEARS } from '../libs/consts'
 
 export class Calendar extends Component {
@@ -12,7 +12,7 @@ export class Calendar extends Component {
         this.state = {
             showDate: new Date(),
             selectedDate: new Date(),
-            markers: hasValue(props.markers, {})
+            markers: props.markers
         }
 
         this.prevMonth = this.prevMonth.bind(this)
@@ -22,10 +22,13 @@ export class Calendar extends Component {
         this.setYear = this.setYear.bind(this)
     }
 
-    addMarker(date){
-        this.setState(prev => ({
-            markers: addItem(prev.markers, date)
-        }));
+    setMarkers(markers){
+        this.setState({markers})
+        let start = Object.keys(markers)[0]
+        if(start){
+            this.setDate(start)
+        }
+        
     }
 
     prevMonth(){
@@ -55,6 +58,9 @@ export class Calendar extends Component {
     }
 
     setDate(date){
+        if(typeof date == 'string'){
+            date = new Date(date)
+        }
         this.setState({selectedDate: date, showDate: date});
         if(this.props.onSetDate){
             this.props.onSetDate(date);
@@ -114,7 +120,7 @@ export class Calendar extends Component {
                     _class = 'material bg-secondary-800 text-gray-500 hover:bg-secondary-600 hover:text-white';
                 }
 
-                let marker = this.state.markers[`${n}-${nm+1}-${ny}`]
+                let marker = hasValue(this.state.markers, {})[`${ny}-${zFill(nm + 1, 2)}-${zFill(n, 2)}`]
                 let amount = 0
                 let trades = 0
                 if(marker){
@@ -145,33 +151,33 @@ export class Calendar extends Component {
     }
 
     render() {
-    return (
-        <div className={classNames('h-full', this.props.className)}>
-            <div className='flex flex-col font-medium h-full'>
-                <div className='flex items-center mb-2 pb-1 border-b border-secondary-700'>
-                    <SelectField innerClassName='!py-0 px-1 mr-2' value={this.state.showDate.getMonth()} values={MONTHS}
-                        onChange={this.setMonth}/>
-                    <SelectField innerClassName='!py-0 px-1' value = {this.state.showDate.getFullYear()-1990} values={YEARS}
-                        onChange={this.setYear}/>
-                    <IconBtn className='ml-auto' icon={faCalendarDay} onClick={() => this.setDate(new Date())}  box/>
-                    <IconBtn className='mx-1' icon={faChevronCircleLeft} onClick={this.prevMonth}  box/>
-                    <IconBtn icon={faChevronCircleRight} onClick={this.nextMonth}  box/>
-                </div>
-                <div className='flex justify-between my-4 text-sm'>
-                    <div className='relative' style={{width:50}}><span className='center'>Su</span></div>
-                    <div className='relative' style={{width:50}}><span className='center'>Mo</span></div>
-                    <div className='relative' style={{width:50}}><span className='center'>Tu</span></div>
-                    <div className='relative' style={{width:50}}><span className='center'>We</span></div>
-                    <div className='relative' style={{width:50}}><span className='center'>Th</span></div>
-                    <div className='relative' style={{width:50}}><span className='center'>Fr</span></div>
-                    <div className='relative' style={{width:50}}><span className='center'>Sa</span></div>
-                </div>
-                <div className='flex flex-col space-y-1 grow'>
-                    {this.getCalender(this.state.showDate.getMonth(),this.state.showDate.getFullYear())}
+        return (
+            <div className={classNames('h-full', this.props.className)}>
+                <div className='flex flex-col font-medium h-full'>
+                    <div className='flex items-center mb-2 pb-1 border-b border-secondary-700'>
+                        <SelectField innerClassName='!py-0 px-1 mr-2' value={this.state.showDate.getMonth()} values={MONTHS}
+                            onChange={this.setMonth}/>
+                        <SelectField innerClassName='!py-0 px-1' value = {this.state.showDate.getFullYear()-1990} values={YEARS}
+                            onChange={this.setYear}/>
+                        <IconBtn className='ml-auto' icon={faCalendarDay} onClick={() => this.setDate(new Date())}  box/>
+                        <IconBtn className='mx-1' icon={faChevronCircleLeft} onClick={this.prevMonth}  box/>
+                        <IconBtn icon={faChevronCircleRight} onClick={this.nextMonth}  box/>
+                    </div>
+                    <div className='flex justify-between my-4 text-sm'>
+                        <div className='relative' style={{width:50}}><span className='center'>Su</span></div>
+                        <div className='relative' style={{width:50}}><span className='center'>Mo</span></div>
+                        <div className='relative' style={{width:50}}><span className='center'>Tu</span></div>
+                        <div className='relative' style={{width:50}}><span className='center'>We</span></div>
+                        <div className='relative' style={{width:50}}><span className='center'>Th</span></div>
+                        <div className='relative' style={{width:50}}><span className='center'>Fr</span></div>
+                        <div className='relative' style={{width:50}}><span className='center'>Sa</span></div>
+                    </div>
+                    <div className='flex flex-col space-y-1 grow'>
+                        {this.getCalender(this.state.showDate.getMonth(),this.state.showDate.getFullYear())}
+                    </div>
                 </div>
             </div>
-        </div>
-    )
+        )
     }
 }
 

@@ -4,7 +4,7 @@ import Field from '../core/components/Field';
 import { classNames } from '../utils';
 import IconBtn from './IconBtn';
 
-export class InputFieldTest extends Field {
+class InputField extends Field {
     init(){
         super.init()
         this.defaultValue = ''
@@ -15,18 +15,18 @@ export class InputFieldTest extends Field {
             <Fragment>
                 <input 
                     ref={this.input} 
-                    type={this.state.type} 
+                    type={this.props.type} 
                     id={this.props.id} 
                     disabled={this.props.disabled}
                     className={
                         classNames("bg-inherit text-sm rounded border-0 p-1 focus:ring-0 outline-none grow min-w-0",
-                        this.props.disabled ? 'text-secondary-500' : '')
+                        this.props.disabled ? 'text-secondary-500' : '', this.props.inputClassName)
                     }
                     onChange={(e) => this.set(e.target.value)} 
                     placeholder={this.props.placeholder} 
                     value={this.state.value}
-                    onFocus={() => this.setState({ focused: true })} 
-                    onBlur={() => this.setState({ focused: false })}
+                    onFocus={this.onFocus}
+                    onBlur={this.onBlur}
                     readOnly={this.props.readOnly} 
                     onKeyPress={this.onKeyPress} />
                 {this.props.type == 'password' && 
@@ -50,4 +50,4 @@ export class InputFieldTest extends Field {
     }
 }
 
-export default InputFieldTest
+export default InputField

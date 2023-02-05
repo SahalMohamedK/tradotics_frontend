@@ -5,7 +5,7 @@ import { iconTabAdapter, simpleTabAdapter } from '../adapters/tabs'
 import { Tab, TabBar, TabView } from '../components/Tab'
 import { popularCompareTableAdapter, savedCompareTableAdapter } from '../adapters/table'
 import { faCalendar, faCirclePlus, faFilter, faLock, faSave, faSliders, faStar, faStopwatch, faUser, faXmarkCircle } from '@fortawesome/free-solid-svg-icons'
-import { areaGraphData, areaGraphOptions, doughnutChartData, doughnutChartOptions, doughnutChartTextPlugin } from '../libs'
+import { areaGraphData, areaGraphDoubleData, areaGraphOptions, doughnutChartData, doughnutChartOptions, doughnutChartTextPlugin } from '../libs'
 import Card from '../components/Card'
 import Icon from '../components/Icon'
 import Table from '../components/Table'
@@ -19,24 +19,85 @@ import BarGraphCard from '../elements/BarGraphCard'
 import { Filter } from '../elements/Filter'
 import { useEffect } from 'react'
 import { useUI } from '../contexts/UIContext'
+import { useAPI } from '../contexts/APIContext'
+import { API_URL } from '../config'
+import { classNames, round } from '../utils'
 
 
 export default function Compare() {
-    let data2 = doughnutChartData(['Wins', 'Losses'],[300, 60])
+    let data2 = doughnutChartData(['0 Wins', '0 Losses'],[50, 50])
 
-    const { setIsLoading } = useUI()
+    const { isSigned, isFirstSigned, post, getAuth } = useAPI()
+    const { setLoading } = useUI()
     
-    const [winrateData, setWinrateData] = useState(data2)
-    const [cumulativePLData, setCumulativePLData] = useState(areaGraphData(['09:24', '', '', '', '10:07'], [0,-300,300,600,400]))
+    const [winrateData1, setWinrateData1] = useState(data2)
+    const [winrateData2, setWinrateData2] = useState(data2)
+    const [cumulativePLData, setCumulativePLData] = useState(areaGraphDoubleData([], [], []))
     const [dialyPLData, setDialyPLData] = useState(areaGraphData(['09:24', '', '', '', '10:07'], [0,100,400,100,300]))
+
+    const [filter1, setFilter1] = useState({})
+    const [filter2, setFilter2] = useState({})
+    const [cumulativePLData1, setCumulativePLData1] = useState(areaGraphData([], []))
+    const [cumulativePLData2, setCumulativePLData2] = useState(areaGraphData([], []))
+    const [highest1, setHighest1] = useState(0)
+    const [highest2, setHighest2] = useState(0)
+    const [lowest1, setLowest1] = useState(0)
+    const [lowest2, setLowest2] = useState(0)
+    const [profitFactor1, setprofitFactor1] = useState(0)
+    const [profitFactor2, setprofitFactor2] = useState(0)
+    const [avgWinners1, setAvgWinners1] = useState(0)
+    const [avgWinners2, setAvgWinners2] = useState(0)
+    const [avgLossers1, setAvgLossers1] = useState(0)
+    const [avgLossers2, setAvgLossers2] = useState(0)
+    const [avgHoldTime1, setAvgHoldTime1] = useState(0)
+    const [avgHoldTime2, setAvgHoldTime2] = useState(0)
 
     let tabView = useRef()
     let tabView1 = useRef()
     let editDialog = useRef()
 
+
+    function showData() {
+        post(API_URL + '/compare', {filter1, filter2}, getAuth()).then(response => {
+            let { trades1, trades2, doubleCumulativePnl } = response.data
+            setCumulativePLData1(areaGraphData(...trades1.cumulativePnl))
+            setCumulativePLData2(areaGraphData(...trades2.cumulativePnl))
+            setWinrateData1(doughnutChartData([`${trades1.winners} Wins`, `${trades1.lossers} Losses`], [trades1.winners, trades1.lossers]))
+            setWinrateData2(doughnutChartData([`${trades2.winners} Wins`, `${trades2.lossers} Losses`], [trades2.winners, trades2.lossers]))
+            setHighest1(trades1.highestPnl)
+            setLowest1(trades1.lowestPnl)
+            setHighest2(trades2.highestPnl)
+            setLowest2(trades2.lowestPnl)
+            setprofitFactor1(trades1.profitFactor)
+            setprofitFactor2(trades2.profitFactor)
+            setAvgWinners1(round(trades1.returns.winners / trades1.winners, 2))
+            setAvgLossers1(round(Math.abs(trades1.returns.losers) / trades1.lossers, 2))
+            setAvgWinners2(round(trades2.returns.winners / trades2.winners, 2))
+            setAvgLossers2(round(Math.abs(trades2.returns.losers) / trades2.lossers, 2))
+            setAvgHoldTime1(trades1.holdTimes[0])
+            setAvgHoldTime2(trades2.holdTimes[0])
+            setCumulativePLData(areaGraphDoubleData(...doubleCumulativePnl))
+            
+        }).catch(err => {
+            console.log(err)
+        })
+    }
+
     useEffect(() => {
-        setIsLoading(false);
-    },[])
+        showData()
+    }, [filter1, filter2])
+
+    useEffect(() => {
+        setLoading(true)
+        if (isSigned === false) {
+            navigate('/signin')
+        } else if (isSigned && isFirstSigned) {
+            navigate('/settings')
+            toast.info('Setup your profile', 'First you need to setup user user profile details.')
+        } else if (isSigned) {
+            setLoading(false)
+        }
+    }, [isSigned, isFirstSigned])
 
     return (
         <div className='pt-16 -my-4 h-screen'>
@@ -63,10 +124,10 @@ export default function Compare() {
                             <Card innerClassName='flex space-x-2 items-end !mr-4'>
                                 <div className='ml-auto w-4/5 flex'>
                                     <div className='w-1/3'>
-                                        <Filter className='w-fit mx-auto' label='Filter 1'/>
+                                        <Filter className='w-fit mx-auto' label='Filter 1' onFilterSet={setFilter1}/>
                                     </div>
                                     <div className='w-1/3'>
-                                        <Filter className='w-fit mx-auto' label='Filter 2'/>
+                                        <Filter className='w-fit mx-auto' label='Filter 2' onFilterSet={setFilter2}/>
                                     </div>
                                     <div className='w-1/3 flex justify-center space-x-2'>
                                         <div className='secondary-btn item'>Reset</div>
@@ -115,10 +176,10 @@ export default function Compare() {
                                         </div>
                                         <div className='w-full md:w-4/5 flex flex-wrap'>
                                             <div className='w-1/2 md:w-1/3 border border-r-0 md:border-t-0 border-secondary-800 p-2'>                        
-                                                    <Line options={areaGraphOptions} data={areaGraphData(['01/08/22','10/08/22','20/08/22','30/08/22'],[10,-40,150,130])} />
+                                                    <Line options={areaGraphOptions} data={cumulativePLData1} />
                                             </div>
                                             <div className='w-1/2 md:w-1/3 border md:border-r-0 md:border-t-0 border-secondary-800 p-2'>
-                                                    <Line options={areaGraphOptions} data={areaGraphData(['01/08/22','10/08/22','20/08/22','30/08/22'],[40,20,-50,120])} />
+                                                    <Line options={areaGraphOptions} data={cumulativePLData2} />
                                             </div>
                                             <div className='w-full md:w-1/3 border-l border-b border-r border-secondary-800 p-2 md:py-5 md:px-10'>
                                                 <div>Net P&L</div>
@@ -149,13 +210,13 @@ export default function Compare() {
                                         <div className='w-full md:w-4/5 flex flex-wrap'>
                                             <div className='w-1/2 md:w-1/3 border border-r-0 md:border-t-0 border-secondary-800 p-2 md:py-5 md:px-10'>
                                                 <div style={{height:'100px'}}>
-                                                    <Doughnut data={winrateData} options={doughnutChartOptions} plugins={[doughnutChartTextPlugin('50%', '#22c55e')]}/>
+                                                    <Doughnut data={winrateData1} options={doughnutChartOptions} plugins={[doughnutChartTextPlugin('50%', '#22c55e')]}/>
                                                 </div>
                                             </div>
                                             <div className='w-1/2 md:w-1/3 border md:border-r-0 md:border-t-0 border-secondary-800 p-2 md:py-5 md:px-10'>
                                                 
                                                 <div style={{height:'100px'}}>
-                                                    <Doughnut data={winrateData} options={doughnutChartOptions} plugins={[doughnutChartTextPlugin('50%', '#22c55e')]}/>
+                                                    <Doughnut data={winrateData2} options={doughnutChartOptions} plugins={[doughnutChartTextPlugin('50%', '#22c55e')]}/>
                                                 </div>
                                             </div>
                                             <div className='w-full md:w-1/3 border-l border-b border-r border-secondary-800 p-2 md:py-5 md:px-10'>
@@ -180,8 +241,8 @@ export default function Compare() {
                                             <div className='text-secondary-500 text-lg font-bold h-full'>Highest profitable trade</div>
                                         </div>
                                         <div className='w-full md:w-4/5 flex flex-wrap'>
-                                            <div className='w-1/2 md:w-1/3 border border-r-0 md:border-t-0 border-secondary-800 p-2 md:py-5 md:px-10 text-center text-green-500'>$5590</div>
-                                            <div className='w-1/2 md:w-1/3 border md:border-r-0 md:border-t-0 border-secondary-800 p-2 md:py-5 md:px-10 text-center'>$5590</div>
+                                            <div className={classNames('w-1/2 md:w-1/3 border border-r-0 md:border-t-0 border-secondary-800 p-2 md:py-5 md:px-10 text-center', highest1>highest2? 'text-green-500': '')}>${highest1}</div>
+                                            <div className={classNames('w-1/2 md:w-1/3 border md:border-r-0 md:border-t-0 border-secondary-800 p-2 md:py-5 md:px-10 text-center', highest2>highest1? 'text-green-500': '')}>${highest2}</div>
                                             <div className='w-full md:w-1/3 border-l border-b border-r border-secondary-800 p-2 md:py-5 md:px-10'>
                                                 <div className='flex justify-between items-center h-full'>
                                                     <div>Filter 1</div> 
@@ -196,8 +257,8 @@ export default function Compare() {
                                             <div className='text-secondary-500 text-lg font-bold h-full'>Highest lossing trade</div>
                                         </div>
                                         <div className='w-full md:w-4/5 flex flex-wrap'>
-                                            <div className='w-1/2 md:w-1/3 border border-r-0 md:border-t-0 border-secondary-800 py-5 px-10 text-center'>$5590</div>
-                                            <div className='w-1/2 md:w-1/3 border md:border-r-0 md:border-t-0 border-secondary-800 py-5 px-10 text-center text-green-500'>$5590</div>
+                                            <div className={classNames('w-1/2 md:w-1/3 border border-r-0 md:border-t-0 border-secondary-800 py-5 px-10 text-center', lowest1<lowest2 ? 'text-red-500': '')}>${Math.abs(lowest1)}</div>
+                                            <div className={classNames('w-1/2 md:w-1/3 border md:border-r-0 md:border-t-0 border-secondary-800 py-5 px-10 text-center', lowest2<lowest1 ? 'text-red-500': '')}>${Math.abs(lowest2)}</div>
                                             <div className='w-full md:w-1/3 border-l border-b border-r border-secondary-800 p-2 md:py-5 md:px-10'>
                                                 <div className='flex justify-between items-center h-full'>
                                                     <div>Filter 1</div> 
@@ -207,7 +268,7 @@ export default function Compare() {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className='md:flex items-center'>
+                                    {/* <div className='md:flex items-center'>
                                         <div className='w-full md:w-1/5 pt-3 md:p-0'>
                                             <div className='text-secondary-500 text-lg font-bold h-full'>Gross P&L</div>
                                         </div>
@@ -222,14 +283,14 @@ export default function Compare() {
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </div> */}
                                     <div className='md:flex items-center'>
                                         <div className='w-full md:w-1/5 pt-3 md:p-0'>
                                             <div className='text-secondary-500 text-lg font-bold h-full'>Profit factor</div>
                                         </div>
                                         <div className='w-full md:w-4/5 flex flex-wrap'>
-                                            <div className='w-1/2 md:w-1/3 border border-r-0 md:border-t-0 border-secondary-800 py-5 px-10 text-center text-green-500'>2.55</div>
-                                            <div className='w-1/2 md:w-1/3 border md:border-r-0 md:border-t-0 border-secondary-800 py-5 px-10 text-center'>2.55</div>
+                                            <div className={classNames('w-1/2 md:w-1/3 border border-r-0 md:border-t-0 border-secondary-800 py-5 px-10 text-center', profitFactor1>profitFactor2?'text-green-500':'')}>{profitFactor1}</div>
+                                            <div className={classNames('w-1/2 md:w-1/3 border md:border-r-0 md:border-t-0 border-secondary-800 py-5 px-10 text-center', profitFactor2>profitFactor1?'text-green-500':'')}>{profitFactor2}</div>
                                             <div className='w-full md:w-1/3 border-l border-b border-r border-secondary-800 p-2 md:py-5 md:px-10'>
                                                 <div className='flex justify-between items-center h-full'>
                                                     <div>Filter 1</div> 
@@ -244,8 +305,8 @@ export default function Compare() {
                                             <div className='text-secondary-500 text-lg font-bold h-full'>Avarage profit</div>
                                         </div>
                                         <div className='w-full md:w-4/5 flex flex-wrap'>
-                                            <div className='w-1/2 md:w-1/3 border border-r-0 md:border-t-0 border-secondary-800 py-5 px-10 text-center'>$5590</div>
-                                            <div className='w-1/2 md:w-1/3 border md:border-r-0 md:border-t-0 border-secondary-800 py-5 px-10 text-center text-green-500'>$5590</div>
+                                            <div className={classNames('w-1/2 md:w-1/3 border border-r-0 md:border-t-0 border-secondary-800 py-5 px-10 text-center', avgWinners1>avgWinners2?'text-green-500':'')}>{avgWinners1}</div>
+                                            <div className={classNames('w-1/2 md:w-1/3 border md:border-r-0 md:border-t-0 border-secondary-800 py-5 px-10 text-center', avgWinners2>avgWinners1?'text-green-500':'')}>{avgWinners2}</div>
                                             <div className='w-full md:w-1/3 border-l border-b border-r border-secondary-800 p-2 md:py-5 md:px-10'>
                                                 <div className='flex justify-between items-center h-full'>
                                                     <div>Filter 1</div> 
@@ -260,8 +321,8 @@ export default function Compare() {
                                             <div className='text-secondary-500 text-lg font-bold h-full'>Avarage loss</div>
                                         </div>
                                         <div className='w-full md:w-4/5 flex flex-wrap'>
-                                            <div className='w-1/2 md:w-1/3 border border-r-0 md:border-t-0 border-secondary-800 py-5 px-10 text-center'>$5590</div>
-                                            <div className='w-1/2 md:w-1/3 border md:border-r-0 md:border-t-0 border-secondary-800 py-5 px-10 text-center text-green-500'>$5590</div>
+                                            <div className={classNames('w-1/2 md:w-1/3 border border-r-0 md:border-t-0 border-secondary-800 py-5 px-10 text-center', avgLossers1>avgLossers2?'text-green-500':'')}>{avgLossers1}</div>
+                                            <div className={classNames('w-1/2 md:w-1/3 border md:border-r-0 md:border-t-0 border-secondary-800 py-5 px-10 text-center', avgLossers2>avgLossers1?'text-green-500':'')}>{avgLossers2}</div>
                                             <div className='w-full md:w-1/3 border-l border-b border-r border-secondary-800 p-2 md:py-5 md:px-10'>
                                                 <div className='flex justify-between items-center h-full'>
                                                     <div>Filter 1</div> 
@@ -276,8 +337,8 @@ export default function Compare() {
                                             <div className='text-secondary-500 text-lg font-bold h-full'>Avarage duration</div>
                                         </div>
                                         <div className='w-full md:w-4/5 flex flex-wrap'>
-                                            <div className='w-1/2 md:w-1/3 border border-r-0 md:border-t-0 border-secondary-800 py-5 px-10 text-center text-green-500'>00:24:23</div>
-                                            <div className='w-1/2 md:w-1/3 border md:border-r-0 md:border-t-0 border-secondary-800 py-5 px-10 text-center'>00:24:23</div>
+                                            <div className='w-1/2 md:w-1/3 border border-r-0 md:border-t-0 border-secondary-800 py-5 px-10 text-center'>{avgHoldTime1}</div>
+                                            <div className='w-1/2 md:w-1/3 border md:border-r-0 md:border-t-0 border-secondary-800 py-5 px-10 text-center'>{avgHoldTime2}</div>
                                             <div className='w-full md:w-1/3 border-l border-r border-b border-secondary-800 p-2 md:py-5 md:px-10'>
                                                 <div className='flex justify-between items-center h-full'>
                                                     <div>Filter 1</div> 

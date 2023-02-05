@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { DAYS, MONTHS } from '../libs/consts';
+import { DAYS, DURATIONS, MONTHS, SETUPS } from '../libs/consts';
 import { Bar, Doughnut, Line } from 'react-chartjs-2'
 import { simpleTabAdapter } from '../adapters/tabs';
 import { Tab, TabBar, TabView } from '../components/Tab';
@@ -18,23 +18,43 @@ import { useAPI } from '../contexts/APIContext';
 import { useNavigate } from 'react-router-dom';
 import { useUI } from '../contexts/UIContext';
 import { useFilter } from '../contexts/FilterContext';
+import { API_URL } from '../config';
+import { classNames } from '../utils';
+import Pagination from '../elements/Pagination';
  
 function Dashboard() {  
-    let data2 = doughnutChartData(['53 Wins', '15 Losses'],[300, 60])
+    let data2 = doughnutChartData(['0 Wins', '0 Losses'],[50, 50])
 
     const [winrateData, setWinrateData] = useState(data2)
+    const [winrateByDayData, setWinrateByDayData] = useState(data2)
     const [executionsNumber, setExecutionsNumber] = useState(0)
-    const [dialyPLData, setDialyPLData] = useState(barGraphData(['09 Aug 22', '09 Aug 22', '09 Aug 22','09 Aug 22', '09 Aug 22','09 Aug 22', '09 Aug 22'], [50,-300,300,600,400, 500, -200]))
-    const [cumulativePLData, setCumulativePLData] = useState(areaGraphData(['09:24', '', '', '', '10:07'], [0,100,400,100,300]))
+    const [winners, setWinners] = useState(0)
+    const [winnersByDays, setWinnersByDays] = useState(0)
+    const [dialyPLData, setDialyPLData] = useState(barGraphData([], []))
+    const [cumulativePLData, setCumulativePLData] = useState(areaGraphData([], []))
+    const [totalNetPnl, setTotalNetPnl] = useState(0)
+    const [totalTrades, setTotalTrades] = useState(0)
+    const [profitFactor, setprofitFactor] = useState(0)
+    const [avgWinners, setAvgWinners] = useState(0)
+    const [avgLossers, setAvgLosers] = useState(0)
+    const [insights, setInsights] = useState([])
+    const [pnlByDays, setPnlByDays] = useState([0, 0, 0, 0, 0, 0, 0])
+    const [pnlByMonths, setPnlByMonths] = useState([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    const [pnlBySetup, setPnlBySetup] = useState([0, 0, 0, 0, 0, 0, 0])
+    const [pnlByDuration, setPnlByDuration] = useState([0, 0, 0, 0, 0])
+    
+    // const [dataLoading, ]
 
     const [start, setStart] = useState(0)
     const [limit, setLimit] = useState(25)
 
     let tabView = useRef()
     let tradeTable = useRef()
+    let calendar = useRef()
+    let openTable = useRef()
 
-    const { isSigned, isFirstSigned, getOutputTrades } = useAPI()
-    const { toast, setIsLoading } = useUI()
+    const { isSigned, isFirstSigned, post, getAuth } = useAPI()
+    const { toast, setLoading } = useUI()
     const { filters } = useFilter()
     const navigate = useNavigate()
 
@@ -42,34 +62,59 @@ function Dashboard() {
         setStart(start+limit)
     }
 
-    useEffect(() => {
-       showTrades()
-    }, [start, filters])
-
-    function showTrades(){
+    function showData(){
         tradeTable.current.removeAll()
-        getOutputTrades(filters).then(response => {
-            let trades = response.data
+        openTable.current.removeAll()
+        post(API_URL+'/dashboard', filters , getAuth()).then(response => {
+            let data = response.data
+            let trades = data.tradesTable
+            let openTrades = data.openTrades
             for(var i in trades){
                 let trade = trades[i]
-                tradeTable.current.add(trade.status, trade.date, trade.symbol, trade.net_pnl, trade.roi, 1, 40, 'Fib', trade.entry_time, 1203.00, trade.exit_time, 1203.00)
+                tradeTable.current.add(trade.status, trade.entryDate, trade.symbol, trade.netPnl, trade.roi, trade.tradeType, trade.quantity, 'Fib', trade.entryTime, trade.entryPrice, trade.exitTime, trade.exitPrice, trade.id)
             }
+            setCumulativePLData(areaGraphData(...data.cumulativePnl))
+            setTotalNetPnl(data.totalNetPnl)
+            setAvgLosers(data.returns.losers / data.losers)
+            setAvgWinners(data.returns.winners / data.winners)
+            setTotalTrades(data.totalTrades)
+            setprofitFactor(data.totalProfitFactor)
+            calendar.current.setMarkers(data.tradesByDays)
+            setWinners(data.winners)
+            setWinnersByDays(data.winnersByDays)
+            setWinrateData(doughnutChartData([`${data.winners} Wins`, `${data.losers} Losses`], [data.winners, data.losers]))
+            setWinrateByDayData(doughnutChartData([`${data.winnersByDays} Wins`, `${data.losersByDays} Losses`], [data.winnersByDays, data.losersByDays]))
+            setInsights(data.insights)
+            for(var i in openTrades){
+                let trade = openTrades[i]
+                openTable.current.add(trade.entryDate, trade.symbol, trade.tradeType, trade.quantity)
+            }
+            setPnlByDays(data.pnlByDays)
+            setPnlByMonths(data.pnlByMonths)
+            setPnlBySetup(data.pnlBySetup)
+            setPnlByDuration(data.pnlByDuration)
+            setDialyPLData(barGraphData(...data.dialyPnl))
+            setLoading(false)
+
         }).catch(err => {
             console.log(err)
         })
     }
 
     useEffect(() => {
+        showData()
+    }, [start, filters])
+
+    useEffect(() => {
+        setLoading(true)
         if(isSigned === false){
             navigate('/signin')
         }else if (isSigned && isFirstSigned){
             navigate('/settings')
             toast.info('Setup your profile', 'First you need to setup user user profile details.')
-        }else if(isSigned){
-            setIsLoading(false)
+        }else if (isSigned){
         }
     }, [isSigned, isFirstSigned])
-
     return (
         <div className='md:flex flex-wrap mt-16'>
             <div className='w-full lg:w-2/3 flex flex-col order-1'>
@@ -77,22 +122,23 @@ function Dashboard() {
                     <ProgressCard className='w-full md:w-1/4' icon={faZap} label='Tradotics scrore' value={5}/>
                     <Card className='w-full md:w-3/4'>
                         <div className='md:flex items-center justify-between h-full text-center'>
-                            <div className='text-lg font-bold pb-2 md:pb-2'>Total net P&L</div>
                             <div className='py-2 md:py-0 md:px-2 border-secondary-700'>
-                                <div className='text-xs'>In 68 trades</div>
-                                <div className='text-lg font-bold text-green-500'>$<CountUp delay={1} end={25683} separator=',' useEasing/></div>
+                                <div className='text-xs'>In {totalTrades} trades</div>
+                                <div className={classNames('text-lg font-bold', totalNetPnl>0?'text-green-500':'text-red-500')}>
+                                    $<CountUp delay={1} end={Math.abs(totalNetPnl)} separator=',' useEasing/>
+                                </div>
                             </div>
                             <div className='border-t py-2 md:py-0 md:border-t-0 md:border-l md:px-2 border-secondary-800'>
                                 <div className='text-xs'>Profit factor</div>
-                                <div className='text-lg font-bold'>2.55</div>
+                                <div className='text-lg font-bold'>{profitFactor}</div>
                             </div>
                             <div className='border-t py-2 md:py-0 md:border-t-0 md:border-l md:px-2 border-secondary-800'>
                                 <div className='text-xs'>Avarage winners</div>
-                                <div className='text-lg font-bold text-green-500'>$<CountUp delay={1} end={25683} separator=',' useEasing/></div>
+                                <div className='text-lg font-bold text-green-500'>$<CountUp delay={1} end={avgWinners} separator=',' useEasing/></div>
                             </div>
                             <div className='border-t py-2 md:py-0 md:border-t-0 md:border-l md:pl-2 border-secondary-800'>
                                 <div className='text-xs'>Avarage losers</div>
-                                <div className='text-lg font-bold text-red-500'>$<CountUp delay={1} end={25683} separator=',' useEasing/></div>
+                                <div className='text-lg font-bold text-red-500'>$<CountUp delay={1} end={Math.abs(avgLossers)} separator=',' useEasing/></div>
                             </div>
                         </div>
                     </Card>
@@ -105,7 +151,7 @@ function Dashboard() {
                                 <div className='font-bold text-sm'>Winrate by trades</div>
                             </div>
                             <div style={{height:'100px'}}>
-                                <Doughnut data={winrateData} options={doughnutChartOptions} plugins={[doughnutChartTextPlugin('50%', '#22c55e')]}/>
+                                <Doughnut data={winrateData} options={doughnutChartOptions} plugins={[doughnutChartTextPlugin((100*winners / totalTrades)+'%', '#22c55e')]}/>
                             </div>
                         </Card>
                         <Card className='h-1/2'>
@@ -114,7 +160,7 @@ function Dashboard() {
                                 <div className='font-bold text-sm'>Winrate by days</div>
                             </div>
                             <div style={{height:'100px'}}>
-                                <Doughnut data={winrateData} options={doughnutChartOptions} plugins={[doughnutChartTextPlugin('80%', '#22c55e')]}/>
+                                <Doughnut data={winrateByDayData} options={doughnutChartOptions} plugins={[doughnutChartTextPlugin('80%', '#22c55e')]}/>
                             </div>
                         </Card>
                     </div>
@@ -122,8 +168,8 @@ function Dashboard() {
                         <div className='flex flex-col h-full'>
                             <div className='flex mb-5'>
                                 <TabBar className='flex' view={tabView} adapter={simpleTabAdapter}>
-                                    <Tab id='cumulative-pl' label='Cumulative P&L' active/>
-                                    <Tab id='dialy-pl' label='Dialy P&L'/>
+                                    <Tab id='cumulative-pl' label='Cumulative P&L' />
+                                    <Tab id='dialy-pl' label='Dialy P&L' active />
                                 </TabBar>
                             </div>
                             <div className='grow'>
@@ -141,52 +187,38 @@ function Dashboard() {
                 </div>
             </div>
             <Card className='w-full md:w-1/2 lg:w-1/3 order-2 md:order-3 lg:order-2'>
-                <Calendar markers={{'16-12-2022':[40,5],'22-12-2022':[40,5],'19-12-2022':[-40,5], '1-12-2022':[-50,2]}}/>
+                <Calendar ref={calendar}/>
             </Card>
             <Card className='w-full lg:w-3/4 order-3 md:order-4 lg:order-3'>
                 <div className='overflow-auto h-96'>
                     <Table ref={tradeTable} headers={['Status','Date', 'Symbol', 'Net P&L', 'ROI', 'Side', 'Volume', 'Setup', 'Entry time', 'Entry price', 'Exit time', 'Exit price']}
                             adapter={dashboardTableAdapter} onChange={(data) => setExecutionsNumber(data.length)}
-                            onClick={()=>{}}/>
+                        onClick={(items) => { navigate('/trade-analytics/'+items[items.length-1])}}/>
                 </div>
-                <div className='mt-2 text-xs text-center text-secondary-500'>Showing {executionsNumber} execution{executionsNumber > 1 ? 's' : ''}. <a className='text-indigo-500' href="/trades">View all</a><button onClick={showNextTrades}>next</button></div>
+                <div className='mt-2'>
+                    <Pagination className='w-fit mx-auto' limit={120}/>
+                </div>
             </Card>
-            <Insightes className='w-full md:w-1/2 lg:w-1/4 order-4 md:order-2 lg:order-4' items={[
-                'Profit is maximum at 0.6% stopless and 1.4% target.',
-                'There will be an increase of 22% in your P&L if optimum level were applied',
-                'There is 20% increase(67%)  in winrate of trades at optimum level ,compared to winrate of your current level trades (59%)',
-                'Filter 1 has produce 200$ (12%) more profit than filter 2  produce 200$ (12%) more profit than filter 2',
-                'Filter 1 has produce 200$ (12%) more profit than filter 2  produce 200$ (12%) more profit than filter 2',
-                'Filter 1 has produce 200$ (12%) more profit than filter 2  produce 200$ (12%) more profit than filter 2',
-                'Filter 1 has produce 200$ (12%) more profit than filter 2  produce 200$ (12%) more profit than filter 2',
-                'Filter 1 has produce 200$ (12%) more profit than filter 2  produce 200$ (12%) more profit than filter 2',
-                'Filter 1 has produce 200$ (12%) more profit than filter 2  produce 200$ (12%) more profit than filter 2',
-                'There are 4 trades(14% of trades) which do not meet neither stoploss nor target'                    
-            ]}/>
+            <Insightes className='w-full md:w-1/2 lg:w-1/4 order-4 md:order-2 lg:order-4' items={insights}/>
             <BarGraphCard className='w-full md:w-1/3 lg:w-1/4 order-5' icon={faCalendar} options={[
-                ['Performance by day', DAYS, [-150, 300,200,-500,330,100,460]],
-                ['Performance by Month', MONTHS, [-100,-135, 300, 450,150, -150, -100,-135, 300, 450,150, -150]]
+                ['Performance by day', DAYS, pnlByDays],
+                ['Performance by Month', MONTHS, pnlByMonths]
             ]}/>
             <BarGraphCard className='w-full md:w-1/3 lg:w-1/4 order-6' icon={faSliders} options={[
-                ['Performance by setup', DAYS, [-150, 300,200,-500,330,100,460]],
-                ['Performance by Month', MONTHS, [-100,-135, 300, 450,150, -150, -100,-135, 300, 450,150, -150]]
+                ['Performance by setup', SETUPS, pnlBySetup]
             ]}/>
             <BarGraphCard className='w-full md:w-1/3 lg:w-1/4 order-7' icon={faStopwatch} options={[
-                ['Performance by duration', DAYS, [-150, 300,200,-500,330,100,460]],
-                ['Performance by Month', MONTHS, [-100,-135, 300, 450,150, -150, -100,-135, 300, 450,150, -150]]
+                ['Performance by duration', DURATIONS, pnlByDuration],
+                ['Performance by hour', MONTHS, [-100,-135, 300, 450,150, -150, -100,-135, 300, 450,150, -150]]
             ]}/>
-            <Card className='w-full lg:w-1/4 order-8'>
+            <Card className='w-full lg:w-1/4 order-8' innerClassName='flex flex-col'>
                 <div className='flex items-center space-x-2'>
                     <Icon className='primary-material' icon={faClipboardList} size='sm'/>
                     <div className='font-bold text-lg'>Open positions</div>
                 </div>
-                <Table headers={['Entry date', 'Symbol', 'Side', 'Volume']} adapter={dashboardOpenPositionsTableAdapter}
-                    data={[
-                        ['30 Aug 2022', 'ASIANPAINTS', 'Sell', 34],
-                        ['30 Aug 2022', 'ASIANPAINTS', 'Sell', 34],
-                        ['30 Aug 2022', 'ASIANPAINTS', 'Sell', 34],
-                        ['30 Aug 2022', 'ASIANPAINTS', 'Sell', 34],
-                    ]}/>
+                <div className='overflow-auto grow h-0'>
+                    <Table ref={openTable} headers={['Date', 'Symbol', 'Side', 'Volume']} adapter={dashboardOpenPositionsTableAdapter} />
+                </div>
             </Card>
         </div>
     )

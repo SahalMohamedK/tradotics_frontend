@@ -24,7 +24,7 @@ export default function EarlyAccess() {
     const [uploaded, setUploaded] = useState(false)
     const [brockers, setBrockers] = useState([])
     const [brocker, setBrocker] = useState({})
-    const { setIsLoading, toast } = useUI()
+    const { setLoading, toast } = useUI()
     const { getBrockers, getBrockerDetails, addEarlyAccessUser } = useAPI()
     let navigate = useNavigate()
 
@@ -51,7 +51,6 @@ export default function EarlyAccess() {
                 } else {
                     toast.error('Somthing went wrong!', 'Inernel server error.')
                 }
-
             }).finally(() => {
                 setIsApply(false)
             })
@@ -87,7 +86,7 @@ export default function EarlyAccess() {
         }).catch(err => {
 
         }).finally(() => {
-            setIsLoading(false)
+            setLoading(false)
         })
     }, [])
 
@@ -105,7 +104,7 @@ export default function EarlyAccess() {
                     <div className='m-5' dangerouslySetInnerHTML={{ __html: brocker.desc }}></div>
                     <div className='flex justify-between items-end mt-5 w-full'>
                         <FileField ref={form.ref} name='file' label="Upload file" icon={faFile} className='w-1/2' validator={fileSizeValidator(1048576 * 5)}
-                            onChange={(value) => { setUploaded(value.length !== 0) }}
+                            onChange={(value) => { setUploaded(value.length !== 0) }} accept= '.csv'
                             addons={[
                                 <IconBtn className={classNames(uploaded ? 'block' : 'hidden')} icon={faTrash} size='sm' onClick={() => form.fields.file.reset()} />
                             ]} />

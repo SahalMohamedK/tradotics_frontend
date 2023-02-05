@@ -29,7 +29,7 @@ function SLnTG() {
     let stoplessSlider = useRef()
     let targetSlider = useRef()
 
-    useEffect(() => {
+    (() => {
         setIsLoading(false)
     })
 
