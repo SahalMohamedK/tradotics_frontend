@@ -1,11 +1,11 @@
 import React, { useRef, useState } from 'react'
 import { DAYS, MONTHS } from '../libs/consts'
-import { Doughnut, Line } from 'react-chartjs-2'
+import { Bar, Doughnut, Line } from 'react-chartjs-2'
 import { iconTabAdapter, simpleTabAdapter } from '../adapters/tabs'
 import { Tab, TabBar, TabView } from '../components/Tab'
 import { popularCompareTableAdapter, savedCompareTableAdapter } from '../adapters/table'
 import { faCalendar, faCirclePlus, faFilter, faLock, faSave, faSliders, faStar, faStopwatch, faUser, faXmarkCircle } from '@fortawesome/free-solid-svg-icons'
-import { areaGraphData, areaGraphDoubleData, areaGraphOptions, doughnutChartData, doughnutChartOptions, doughnutChartTextPlugin } from '../libs'
+import { areaGraphData, areaGraphDoubleData, areaGraphOptions, barGraphDoubleData, barGraphOptions, doughnutChartData, doughnutChartOptions, doughnutChartTextPlugin } from '../libs'
 import Card from '../components/Card'
 import Icon from '../components/Icon'
 import Table from '../components/Table'
@@ -22,6 +22,7 @@ import { useUI } from '../contexts/UIContext'
 import { useAPI } from '../contexts/APIContext'
 import { API_URL } from '../config'
 import { classNames, round } from '../utils'
+import { blueColor, yellowColor } from '../core/consts/colors'
 
 
 export default function Compare() {
@@ -33,12 +34,15 @@ export default function Compare() {
     const [winrateData1, setWinrateData1] = useState(data2)
     const [winrateData2, setWinrateData2] = useState(data2)
     const [cumulativePLData, setCumulativePLData] = useState(areaGraphDoubleData([], [], []))
-    const [dialyPLData, setDialyPLData] = useState(areaGraphData(['09:24', '', '', '', '10:07'], [0,100,400,100,300]))
+    const [dialyPnlData, setDialyPnlData] = useState(barGraphDoubleData([], [], []))
+    const [pnlByDays, setPnlByDays] = useState([[], []])
+    const [pnlByMonths, setPnlByMonths] = useState([[], []])
+    const [pnlByDuration, setPnlByDuration] = useState([[], []])
 
     const [filter1, setFilter1] = useState({})
     const [filter2, setFilter2] = useState({})
     const [cumulativePLData1, setCumulativePLData1] = useState(areaGraphData([], []))
-    const [cumulativePLData2, setCumulativePLData2] = useState(areaGraphData([], []))
+    const [cumulativePLData2, setCumulativePLData2] = useState(areaGraphData([], [], blueColor, yellowColor))
     const [highest1, setHighest1] = useState(0)
     const [highest2, setHighest2] = useState(0)
     const [lowest1, setLowest1] = useState(0)
@@ -54,14 +58,14 @@ export default function Compare() {
 
     let tabView = useRef()
     let tabView1 = useRef()
-    let editDialog = useRef()
+    let filtersDialog = useRef()
 
 
     function showData() {
         post(API_URL + '/compare', {filter1, filter2}, getAuth()).then(response => {
-            let { trades1, trades2, doubleCumulativePnl } = response.data
+            let { trades1, trades2, doubleCumulativePnl, doubleDialyPnl } = response.data
             setCumulativePLData1(areaGraphData(...trades1.cumulativePnl))
-            setCumulativePLData2(areaGraphData(...trades2.cumulativePnl))
+            setCumulativePLData2(areaGraphData(...trades2.cumulativePnl, blueColor, yellowColor))
             setWinrateData1(doughnutChartData([`${trades1.winners} Wins`, `${trades1.lossers} Losses`], [trades1.winners, trades1.lossers]))
             setWinrateData2(doughnutChartData([`${trades2.winners} Wins`, `${trades2.lossers} Losses`], [trades2.winners, trades2.lossers]))
             setHighest1(trades1.highestPnl)
@@ -77,6 +81,10 @@ export default function Compare() {
             setAvgHoldTime1(trades1.holdTimes[0])
             setAvgHoldTime2(trades2.holdTimes[0])
             setCumulativePLData(areaGraphDoubleData(...doubleCumulativePnl))
+            setDialyPnlData(barGraphDoubleData(...doubleDialyPnl))
+            setPnlByDays(response.data.pnlByDays)
+            setPnlByMonths(response.data.pnlByMonths)
+            setPnlByDuration(response.data.pnlByDuration)
             
         }).catch(err => {
             console.log(err)
@@ -101,7 +109,7 @@ export default function Compare() {
 
     return (
         <div className='pt-16 -my-4 h-screen'>
-            <Dialog className='w-1/2' ref={editDialog} title='Comparison'>
+            <Dialog className='w-1/2' ref={filtersDialog} title='Comparison'>
                 <InputField  label='Name'/>
                 <InputField  label='Description'/>
                 <div className='flex space-x-2'>
@@ -131,7 +139,7 @@ export default function Compare() {
                                     </div>
                                     <div className='w-1/3 flex justify-center space-x-2'>
                                         <div className='secondary-btn item'>Reset</div>
-                                        <div className='primary-btn'>Save</div>
+                                        <div className='primary-btn' onClick={() => filtersDialog.current.show()}>Save</div>
                                     </div>
                                 </div>
                             </Card>
@@ -210,13 +218,13 @@ export default function Compare() {
                                         <div className='w-full md:w-4/5 flex flex-wrap'>
                                             <div className='w-1/2 md:w-1/3 border border-r-0 md:border-t-0 border-secondary-800 p-2 md:py-5 md:px-10'>
                                                 <div style={{height:'100px'}}>
-                                                    <Doughnut data={winrateData1} options={doughnutChartOptions} plugins={[doughnutChartTextPlugin('50%', '#22c55e')]}/>
+                                                    <Doughnut data={winrateData1} options={doughnutChartOptions} plugins={[doughnutChartTextPlugin('#22c55e')]}/>
                                                 </div>
                                             </div>
                                             <div className='w-1/2 md:w-1/3 border md:border-r-0 md:border-t-0 border-secondary-800 p-2 md:py-5 md:px-10'>
                                                 
                                                 <div style={{height:'100px'}}>
-                                                    <Doughnut data={winrateData2} options={doughnutChartOptions} plugins={[doughnutChartTextPlugin('50%', '#22c55e')]}/>
+                                                    <Doughnut data={winrateData2} options={doughnutChartOptions} plugins={[doughnutChartTextPlugin('#22c55e')]}/>
                                                 </div>
                                             </div>
                                             <div className='w-full md:w-1/3 border-l border-b border-r border-secondary-800 p-2 md:py-5 md:px-10'>
@@ -371,22 +379,21 @@ export default function Compare() {
                                                         <Line className='mb-3 h-full w-full' data={cumulativePLData} options={areaGraphOptions}/>
                                                     </Tab>
                                                     <Tab id='dialy-pl'>
-                                                        <Line className='mb-3 h-full w-full' data={dialyPLData} options={areaGraphOptions}/>
+                                                        <Bar className='mb-3 h-full w-full' data={dialyPnlData} options={{ ...barGraphOptions, indexAxis: 'x' }} />
                                                     </Tab>
                                                 </TabView>
                                             </div>
                                         </div>
                                     </Card>
                                     <BarGraphCard className='w-full md:w-1/3' icon={faCalendar} options={[
-                                        ['Performance by day', DAYS, [-150, 300,200,-500,330,100,460]],
-                                        ['Performance by Month', MONTHS, [-100,-135, 300, 450,150, -150, -100,-135, 300, 450,150, -150]]
+                                        ['Performance by day', DAYS, ...pnlByDays],
+                                        ['Performance by Month', MONTHS, ...pnlByMonths]
                                     ]}/>
                                     <BarGraphCard className='w-full md:w-1/3' icon={faSliders} options={[
-                                        ['Performance by setup', DAYS, [-150, 300,200,-500,330,100,460]],
-                                        ['Performance by Month', MONTHS, [-100,-135, 300, 450,150, -150, -100,-135, 300, 450,150, -150]]
+                                        ['Performance by setup', DAYS, [-150, 300,200,-500,330,100,460]]
                                     ]}/>
                                     <BarGraphCard className='w-full md:w-1/3' icon={faStopwatch} options={[
-                                        ['Performance by duration', DAYS, [-150, 300,200,-500,330,100,460]],
+                                        ['Performance by duration', DAYS, ...pnlByDuration],
                                         ['Performance by Month', MONTHS, [-100,-135, 300, 450,150, -150, -100,-135, 300, 450,150, -150]]
                                     ]}/>
                                 </div>
@@ -404,7 +411,7 @@ export default function Compare() {
                                     ['Win vs Loss', 'Comparisson of win and losses trades'],
                                     ['Gap up vs morning', 'Comparison of trades in the setup of gap up str'],
                                 ]}
-                                editDialog = {editDialog}
+                                filtersDialog = {filtersDialog}
                                 />
                         </Card>
                         <Card>
@@ -417,7 +424,7 @@ export default function Compare() {
                                     ['Win vs Loss', 'Comparisson of win and losses trades'],
                                     ['Gap up vs morning', 'Comparison of trades in the setup of gap up str'],
                                 ]}
-                                editDialog = {editDialog}
+                                filtersDialog = {filtersDialog}
                                 />
 
                         </Card>

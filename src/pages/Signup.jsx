@@ -36,6 +36,7 @@ export default function Signup() {
                     form.error(err.response.data)
                 } else {
                     toast.error('Somthing went wrong!', 'You need to try sometimes.')
+                    console.log(err);
                 }
                 setIsSignup(false)
             })

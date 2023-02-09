@@ -235,6 +235,9 @@ export default function DetailedJournal() {
         } else if (isSigned && isFirstSigned) {
             navigate('/settings')
             toast.info('Setup your profile', 'First you need to setup user user profile details.')
+        }else if(isSigned){
+            setLoading(false)
+
         }
     }, [isSigned, isFirstSigned])
 

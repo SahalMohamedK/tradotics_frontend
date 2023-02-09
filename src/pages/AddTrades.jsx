@@ -70,6 +70,7 @@ function AddTrades() {
     }
 
     function showTradeHistories() {
+        console.log(1);
         tradeHistoryTable.current.removeAll()
         getTradeHistories().then(response => {
             let tradeHistories = response.data

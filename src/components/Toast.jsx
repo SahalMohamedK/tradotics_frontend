@@ -44,23 +44,23 @@ export class Toast extends Component {
         this.hide = this.hide.bind(this);
     }
 
-    success(title, msg, dur=3000){
+    success(title, msg, dur=4000){
         this.show(title, msg, icons['success'], bgColors['success'], textColors['success'], dur)
     }
 
-    info(title, msg, dur=3000){
+    info(title, msg, dur=4000){
         this.show(title, msg, icons['info'], bgColors['info'], textColors['info'], dur)
     }
 
-    error(title, msg, dur=3000){
+    error(title, msg, dur=4000){
         this.show(title, msg, icons['error'], bgColors['error'], textColors['error'], dur)
     }
 
-    warning(title, msg, dur=3000){
+    warning(title, msg, dur=4000){
         this.show(title, msg, icons['warning'], bgColors['warning'], textColors['warning'], dur)
     }
 
-    show(title, msg, icon, bgColor, textColor, dur=3000){
+    show(title, msg, icon, bgColor, textColor, dur=4000){
         this.setState({
             title,
             msg,

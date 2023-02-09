@@ -16,7 +16,6 @@ import { useAPI } from '../contexts/APIContext'
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
-import Spinner from '../components/Spinner'
 import { useUI } from '../contexts/UIContext'
 import Button from '../components/Button'
 import { Form } from '../utils'
@@ -24,20 +23,27 @@ import { Form } from '../utils'
 function Settings() {
     const [isUpdateUser, setIsUpdateUser] = useState(false)
     const { isSigned, isFirstSigned, user, updateUser } = useAPI()
-    const { setIsLoading, toast } = useUI()
+    const { setLoading, toast } = useUI()
     const navigate = useNavigate()
 
     let tabView = useRef()
     let adjustmentsDialog = useRef()
     let commissionsDialog = useRef()
+    let pictureInput = useRef()
 
-    let accountForm = new Form()
+    let userForm = new Form()
+    let profileForm = new Form()
+    let securityForm = new Form()
+    userForm.sub('profile', profileForm)
+
+    function uploadPicture(){
+        pictureInput.current.click();
+    }
 
     function saveAccount() {
         setIsUpdateUser(true)
-        console.log(accountForm.fields)
-        if (accountForm.isValid()) {
-            updateUser(accountForm.get()).then(() => {
+        if (userForm.isValid()) {
+            updateUser(userForm.get(true)).then(() => {
                 toast.success('Profile updated', 'Your profile is updated successfully.')
                 setIsUpdateUser(false)
             }).catch(err => {
@@ -55,9 +61,9 @@ function Settings() {
         if (isSigned === false) {
             navigate('/signin')
         } else {
-            setIsLoading(false)
+            setLoading(false)
         }
-        accountForm.set(user)
+        userForm.set(user)
     }, [isSigned, isFirstSigned, user])
 
     return (
@@ -145,28 +151,29 @@ function Settings() {
                                         <FontAwesomeIcon className='center text-secondary-600' icon={faUser} size='xl' />
                                     </div>
                                     <div className='ml-5 flex flex-col space-y-2'>
-                                        <button href="#" className="primary-btn text-xs mb-1 mr-1">Upload</button>
+                                        <input ref={pictureInput} type="file" style={{ display: 'none' }} accept='image/jpeg,image/png' />
+                                        <button href="#" className="primary-btn text-xs mb-1 mr-1" onClick={uploadPicture}>Upload</button>
                                         <button href="#" className="secondary-btn text-xs mb-1 mr-1">Remove</button>
                                     </div>
                                 </div>
                             </div>
                             <div className='md:flex md:space-x-2'>
-                                <InputField ref={accountForm.ref} className='w-full mb-3' label='First name' icon={fa1}
+                                <InputField ref={userForm.ref} className='w-full mb-3' label='First name' icon={fa1}
                                     disabled={isUpdateUser} required subLabel />
-                                <InputField ref={accountForm.ref} className='w-full mb-3' label='Last name' icon={fa2}
+                                <InputField ref={userForm.ref} className='w-full mb-3' label='Last name' icon={fa2}
                                     disabled={isUpdateUser} required subLabel />
                             </div>
                             <div className='md:flex md:space-x-2'>
-                                <InputField ref={accountForm.ref} className='w-full mb-3' label='Username' icon={faUser}
+                                <InputField ref={userForm.ref} className='w-full mb-3' label='Username' icon={faUser}
                                     readOnly subLabel />
-                                <InputField ref={accountForm.ref} className='w-full mb-3' label='Email' icon={faEnvelope}
+                                <InputField ref={userForm.ref} className='w-full mb-3' label='Email' icon={faEnvelope}
                                     readOnly subLabel />
                             </div>
                             <div className='md:flex flex-wrap'>
-                                <InputField ref={accountForm.ref} className='w-full md:w-1/3 mb-3 pr-2' label='Phone number' icon={faPhone}
+                                <InputField ref={profileForm.ref} name='phoneNumber' className='w-full md:w-1/3 mb-3 pr-2' label='Phone number' icon={faPhone}
                                     disabled={isUpdateUser} required />
-                                <SelectField ref={accountForm.ref} className='w-full md:w-1/3 mb-3 pr-2' label='Time zone' icon={faClock} values={['Asia/Calcutta']} />
-                                <SelectField ref={accountForm.ref} className='w-full md:w-1/3 mb-3 lg:pr-0 md:pr-2' label='Currency' icon={faCoins} values={['INR - Indian rupees']} />
+                                <SelectField ref={userForm.ref} className='w-full md:w-1/3 mb-3 pr-2' label='Time zone' icon={faClock} values={['Asia/Calcutta']} />
+                                <SelectField ref={userForm.ref} className='w-full md:w-1/3 mb-3 lg:pr-0 md:pr-2' label='Currency' icon={faCoins} values={['INR - Indian rupees']} />
                             </div>
                             <div className='flex space-x-2'>
                                 <Button className="primary-btn mb-1" onClick={saveAccount} loading={isUpdateUser}>Save</Button>
@@ -180,10 +187,10 @@ function Settings() {
                                 <Icon className='primary-material mr-2' icon={faLock} size='sm' />
                                 <div className='text-lg font-bold mr-auto'>Security settings</div>
                             </div>
-                            <InputField className='md:w-1/2 mb-3' label='Old password' type='password' icon={faLock} />
+                            <InputField ref={securityForm.ref} className='md:w-1/2 mb-3' label='Old password' type='password' icon={faLock} />
                             <div className='md:flex md:space-x-2'>
-                                <InputField className='w-full mb-3' label='New password' type='password' icon={faLock} />
-                                <InputField className='w-full mb-3' label='Confirm new password' type='password' icon={faLock} />
+                                <InputField ref={securityForm.ref} className='w-full mb-3' label='New password' type='password' icon={faLock} />
+                                <InputField ref={securityForm.ref} className='w-full mb-3' label='Confirm new password' type='password' icon={faLock} />
                             </div>
                             <button href="#" className="duration-200 bg-indigo-500 text-white px-4 py-1 rounded active:bg-indigo-900 hover:bg-indigo-700 mb-1 mr-1">Save</button>
 

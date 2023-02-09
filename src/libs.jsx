@@ -1,4 +1,4 @@
-import { hasValue, hexToRgba } from "./utils";
+import { hasValue, hexToRgba, round, safeNumber } from "./utils";
 
 let textColor = '#64748b';
 let textFont = {size:10, weight: 700}
@@ -58,9 +58,11 @@ function segmentColors(...segments){
     }
 }
 
-export function doughnutChartTextPlugin(text, color){
+export function doughnutChartTextPlugin(color){
     return {
         beforeDraw: function(chart) {
+            let data = chart.data.datasets[0].data
+            let text = safeNumber(round(100*data[0] / (data[0] + data[1]), 0))+'%'
             var width = chart.chartArea.width, height = chart.chartArea.height, ctx = chart.ctx;
             ctx.restore();
             var fontSize = (height / 100).toFixed(2);
@@ -112,11 +114,31 @@ export function barGraphData(labels, data){
         datasets: [{
             data: data,
             backgroundColor: data.map(i => i>=0?greenColor:redColor),
-            
-      barPercentage: 0.75,
-      categoryPercentage: 1,
+            barPercentage: 0.75,
+            categoryPercentage: 1,
             borderRadius: 5,
-        },]
+        }]
+    }
+}
+
+export function barGraphDoubleData(labels, data1, data2) {
+    return {
+        labels: labels,
+        datasets: [{
+            data: data1,
+            backgroundColor: data1.map(i => i >= 0 ? greenColor : redColor),
+            barPercentage: 0.9,
+            categoryPercentage: 0.75,
+            borderRadius: 5,
+        },
+        {
+            data: data2,
+            backgroundColor: data2.map(i => i >= 0 ? blueColor : yellowColor),
+            barPercentage: 0.9,
+            categoryPercentage: 0.75,
+            borderRadius: 5,
+        },
+        ]
     }
 }
 
@@ -202,25 +224,17 @@ export const areaGraphOptions = {
     }
 }
 
-export function areaGraphData(labels, data){
+export function areaGraphData(labels, data, positiveColor = greenColor, negativeValue = redColor){
     return {
         labels: labels,
         datasets: [{
             data: data,
             fill: true,
-            backgroundColor: segmentColors([null, 0, hexToRgba(redColor, 0.3)], [0,null, hexToRgba(greenColor, 0.3)]),
-            borderColor: segmentColors([null, 0, redColor], [0,null, greenColor]),
+            backgroundColor: segmentColors([null, 0, hexToRgba(negativeValue, 0.3)], [0,null, hexToRgba(positiveColor, 0.3)]),
+            borderColor: segmentColors([null, 0, negativeValue], [0,null, positiveColor]),
             pointHoverRadius: 10,
             pointRadius: 4
-        },
-            // {
-            //     data: [0, 300, -300, -600, -400],
-            //     fill: true,
-            //     backgroundColor: segmentColors([null, 0, hexToRgba(primaryColor, 0.3)], [0, null, hexToRgba(greenColor, 0.3)]),
-            //     borderColor: segmentColors([null, 0, primaryColor], [0, null, greenColor]),
-            //     pointHoverRadius: 10,
-            //     pointRadius: 4
-            // }
+        }
         ]
     }
 }

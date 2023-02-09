@@ -19,9 +19,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAPI } from '../contexts/APIContext';
 import { API_URL } from '../config';
 import { classNames, round } from '../utils';
-import {FORMAT} from '../libs/consts'
+import { noTradeError, noTradeHistoriesError } from '../libs/errors';
+import { FORMAT } from '../libs/consts'
 
 
+let savedTrade = ''
 export default function TradeAnalytics() {
 
     let  data = areaGraphData(['09:24','','','','10:07'],[200,800,620,690,390]);
@@ -29,7 +31,6 @@ export default function TradeAnalytics() {
     const [executionsNumber, setExecutionsNumber] = useState(0)
     const [trade, setTrade] = useState({})
     const [execution, setExecution] = useState({})
-    const [savedTrade, setSavedTrade] = useState('')
     const [duration, setDuration] = useState()
     const [note, setNote] = useState('')
 
@@ -44,12 +45,31 @@ export default function TradeAnalytics() {
     let executionEditDialog = useRef()
     let noteDialog = useRef()
 
+    function addSetup(tag){
+        setTrade((prev) => {
+            if(prev['setup']){
+                prev['setup'] = [...prev['setup'], tag]
+            }else{
+                prev['setup'] = [tag]
+            }
+            return structuredClone(prev)
+        })
+    }
+
+    function removeSetup(i){
+        setTrade((prev) => {
+            prev['setup'] = prev['setup'].filter((tag, a) => a !== i)
+            return structuredClone(prev)
+        })
+    }
+
     function showData() {
         executionsTable.current.removeAll()
+        executionsTable.current.loading(true)
         post(API_URL + '/trade/get/'+id, {}, getAuth()).then(response => {
             let data = response.data
+            savedTrade = JSON.stringify(data.trade)
             setTrade(data.trade)
-            setSavedTrade(JSON.stringify(data.trade))
             setDuration(data.duration)
             setNote(data.trade.note)
             var quantity = 0
@@ -75,7 +95,14 @@ export default function TradeAnalytics() {
                 )
             })
             setLoading(false)
+            executionsTable.current.loading(false)
         }).catch(err => {
+            if (noTradeError(err)) {
+                navigate('/no-trade-error')
+            } else if (noTradeHistoriesError(err)) {
+                navigate('/add-trades')
+                toast.info('Add trades', 'There is no trades in your account')
+            }
             console.log(err)
         })
     }
@@ -84,6 +111,7 @@ export default function TradeAnalytics() {
         if(savedTrade != JSON.stringify(trade)){
             updateTrade(trade).then(response => {
                 toast.success('Updated successfully', 'This trade is updated successfully')
+                savedTrade = JSON.stringify(trade)
             }).catch(err => {
                 toast.error('Updation failed', 'Somthing went wrong')
             })
@@ -94,7 +122,17 @@ export default function TradeAnalytics() {
         noteDialog.current.hide()
         trade['note'] = note
         updateData()
+        let newTrade = structuredClone(trade)
+        setTrade(newTrade)
     }
+
+    useEffect(() => {
+        console.log( savedTrade != '' , savedTrade != JSON.stringify(trade))
+        if (savedTrade != '' && savedTrade != JSON.stringify(trade)) {
+            updateData()
+        }
+
+    }, [trade])
 
     useEffect(() => {
         setLoading(true)
@@ -107,7 +145,7 @@ export default function TradeAnalytics() {
             showData()
         }
     }, [isSigned, isFirstSigned])
-    
+
     return (
     <div className='mt-16'>    
         <Dialog className='h-full w-full' ref={chartsDialog} title='Charts'>
@@ -238,7 +276,7 @@ export default function TradeAnalytics() {
                             <div>Duration</div>
                             <div className='ml-auto'>{duration}</div>
                         </div>
-                        <TagsField className='w-full' label='Setup' icon={faWrench}/>
+                            <TagsField className='w-full' label='Setup' icon={faWrench} onAdd={addSetup} onRemove={removeSetup} values={trade.setup}/>
                         <TagsField className='w-full' label='Mistake' icon={faX}/>
                         <TagsField className='w-full' label='Custom Tags' icon={faTag} />
                     </div>
@@ -302,7 +340,7 @@ export default function TradeAnalytics() {
                             <div className='text-lg font-bold mr-auto'>Notes</div>
                             <IconBtn icon={faEdit} onClick={() => noteDialog.current.show()}/>
                         </div>
-                        <div className='text-sm'>{note}</div>
+                        <div className='text-sm'>{trade.note}</div>
                     </Card>
                 </div>
             </div>

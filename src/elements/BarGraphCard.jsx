@@ -3,7 +3,7 @@ import Card from '../components/Card'
 import Icon from '../components/Icon'
 import { Bar} from 'react-chartjs-2'
 import { Listbox, Transition } from '@headlessui/react'
-import { barGraphData, barGraphOptions } from '../libs'
+import { barGraphData, barGraphDoubleData, barGraphOptions } from '../libs'
 import { faAngleDown, faCalendar, faCheck } from '@fortawesome/free-solid-svg-icons'
 import { useState } from 'react'
 import { classNames } from '../utils'
@@ -38,7 +38,12 @@ export default function BarGraphCard({className,icon, options = []}) {
                 </Listbox>
             </div>
             <div className='h-64'>
-                <Bar options={barGraphOptions} data={barGraphData(options[curOption][1], options[curOption][2])} />
+                {options[curOption].length == 3 &&
+                    <Bar options={barGraphOptions} data={barGraphData(options[curOption][1], options[curOption][2])} />
+                }
+                {options[curOption].length == 4 && 
+                    <Bar options={barGraphOptions} data={barGraphDoubleData(options[curOption][1], options[curOption][2], options[curOption][3])} />
+                }
             </div>
         </Card>
     )

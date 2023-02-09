@@ -8,6 +8,9 @@ class InputField extends Field {
     init(){
         super.init()
         this.defaultValue = ''
+        this.state = {
+            type: this.props.type
+        }
     }
 
     field(){
@@ -15,7 +18,7 @@ class InputField extends Field {
             <Fragment>
                 <input 
                     ref={this.input} 
-                    type={this.props.type} 
+                    type={this.state.type} 
                     id={this.props.id} 
                     disabled={this.props.disabled}
                     className={

@@ -147,6 +147,13 @@ export function len(obj){
     return obj.size | obj.length | Object.keys(obj).length
 }
 
+export function safeNumber(n, otherwise=0){
+    if(isNaN(n)){
+        return otherwise
+    }
+    return n
+}
+
 export class Form {
     constructor() {
         this.fields = {}
@@ -173,11 +180,29 @@ export class Form {
         return valid
     }
 
-    get(keys) {
-        let data = new FormData()
+    get(pure = false, keys = undefined) {
         keys = hasValue(keys, Object.keys(this.fields))
+        if(pure){
+            let data = {}
+            for (var key in keys) {
+                let field = this.fields[keys[key]]
+                let value
+                if (field instanceof Form){
+                    value = field.get(pure)
+                }else{
+                    value = field.get()
+                }
+                if (value) {
+                    data[keys[key]] = value
+                }
+            }
+            return data
+        }
+
+        let data = new FormData()
         for (var key in keys) {
-            let value = this.fields[keys[key]].get()
+            let field = this.fields[keys[key]]
+            let value = field.get()
             if (value) {
                 data.append(keys[key], value)
             }
@@ -208,5 +233,9 @@ export class Form {
                 field.set(data[key])
             }
         }
+    }
+
+    sub(key, form){
+        this.fields[key] = form
     }
 }

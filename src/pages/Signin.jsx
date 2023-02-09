@@ -16,7 +16,7 @@ export default function Signin() {
     const [isSignin, setIsSignin] = useState(false)
 
 
-    const { signin, isSigned, getUser } = useAPI()
+    const { signin, isSigned, isFirstSigned } = useAPI()
     const { toast, setLoading } = useUI()
     const navigate = useNavigate()
 
@@ -49,8 +49,13 @@ export default function Signin() {
 
     useEffect(() => {
         if (isSigned) {
-            toast.success('Signin successfully', 'You are already signed in.')
-            navigate('/dashboard');
+            if (isFirstSigned) {
+                navigate('/settings')
+                toast.info('Setup your profile', 'First you need to setup user user profile details.')
+            }else{
+                toast.success('Signin successfully', 'You are already signed in.')
+                navigate('/dashboard');
+            }
         } else if (isSigned === false) {
             setLoading(false)
         }

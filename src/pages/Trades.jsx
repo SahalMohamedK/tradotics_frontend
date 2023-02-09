@@ -12,6 +12,7 @@ import { useFilter } from '../contexts/FilterContext'
 import { useAPI } from '../contexts/APIContext'
 import { API_URL } from '../config'
 import { round } from '../utils'
+import Pagination from '../elements/Pagination'
 
 export default function Trades() {
     const [executionsNumber, setExecutionsNumber] = useState(0)
@@ -21,26 +22,41 @@ export default function Trades() {
 
     const [highestPnl, setHighestPnl] = useState(0)
     const [lowestPnl, setLowestPnl] = useState(0)
+    const [limit, setLimit] = useState(0)
+    const [tradesLoading, setTradesLoading] = useState(false)
 
     const { setLoading } = useUI()
     const { filters } = useFilter()
-    const { isSigned, isFirstSigned, post, getAuth } = useAPI()
+    const { isSigned, isFirstSigned, post, getAuth, getTradeTable } = useAPI()
     const navigate = useNavigate()
 
     let tradeTable = useRef()
 
+    function showTradeTable(start = 0, size = 25) {
+        if (isSigned && !isFirstSigned) {
+            setTradesLoading(true)
+            tradeTable.current.loading(true)
+            tradeTable.current.removeAll()
+            getTradeTable(filters, start, size).then(response => {
+                for (var i in response.data) {
+                    let trade = response.data[i]
+                    tradeTable.current.add(trade.status, trade.entryDate, trade.symbol, trade.netPnl, trade.roi, trade.tradeType, trade.quantity, 'Fib', trade.entryTime, trade.entryPrice, trade.exitTime, trade.exitPrice, trade.id)
+                }
+            }).catch(err => {
+                toast.error("Somthing went wrong", "Trade table is not loaded.")
+            }).finally(() => {
+                tradeTable.current.loading(false)
+                setTradesLoading(false)
+            })
+        }
+    }
+
     function showData() {
-        tradeTable.current.removeAll()
         post(API_URL + '/detailed-report', filters, getAuth()).then(response => {
             let data = response.data
-            let trades = data.tradesTable
-            for (var i in trades) {
-                let trade = trades[i]
-                tradeTable.current.add(trade.status, trade.entryDate, trade.symbol, trade.netPnl, trade.roi, trade.tradeType, trade.quantity, 'Fib', trade.entryTime, trade.entryPrice, trade.exitTime, trade.exitPrice)
-
-            }
             setWinners(data.winners)
             setLosers(data.losers)
+            setLimit(data.totalTrades)
             setTotalTrades(data.totalTrades)
             setHighestPnl(data.highestPnl)
             setLowestPnl(data.lowestPnl)
@@ -51,8 +67,13 @@ export default function Trades() {
     }
 
     useEffect(() => {
-        showData()
-    }, [filters])
+        console.log();
+        if (isSigned && !isFirstSigned) {
+            showTradeTable()
+            showData()
+            setLoading(false)
+        }
+    }, [filters, isSigned, !isFirstSigned])
 
     useEffect(() => {
         setLoading(true)
@@ -61,6 +82,8 @@ export default function Trades() {
         } else if (isSigned && isFirstSigned) {
             navigate('/settings')
             toast.info('Setup your profile', 'First you need to setup user user profile details.')
+        } else if (isSigned) {
+            setLoading(false)
         }
     }, [isSigned, isFirstSigned])
 
@@ -81,10 +104,13 @@ export default function Trades() {
                 </div>
                 <Card className='grow min-h-0' innerClassName='flex flex-col'>
                     <div className='overflow-auto grow'>
-                        <Table ref={tradeTable} headers ={['Status', 'Date', 'Symbol', 'Net P&L', 'ROI', 'Side', 'Volume', 'Setup', 'Entry time', 'Entry price', 'Exit time', 'Exit price']} 
-                            onChange={(data) => setExecutionsNumber(data.length)} adapter={dashboardTableAdapter}/>
+                        <Table ref={tradeTable} headers={['Status', 'Date', 'Symbol', 'Net P&L', 'ROI', 'Side', 'Volume', 'Setup', 'Entry time', 'Entry price', 'Exit time', 'Exit price']}
+                            adapter={dashboardTableAdapter} onChange={(data) => setExecutionsNumber(data.length)}
+                            onClick={(items) => { navigate('/trade-analytics/' + items[items.length - 1]) }} />
                     </div>
-                    <div className='mt-2 text-xs text-center text-secondary-500'>Showing {executionsNumber} execution{executionsNumber>1?'s':''}. <a className='text-indigo-500' href="/trades">View all</a></div>
+                    <div className='mt-2'>
+                        <Pagination className='w-fit mx-auto' limit={limit} onChange={showTradeTable} loading={tradesLoading} />
+                    </div>
                 </Card>
             </div>
         </div>

@@ -28,6 +28,7 @@ import EarlyAccess from './pages/EarlyAccess';
 import Page404 from './pages/Page404';
 import Test from './Test';
 import FilterProvider from './contexts/FilterContext';
+import UnderConstruction from './core/pages/UnderConstruction';
 
 Chart.register(zoomPlugin, ...registerables);
 
@@ -67,7 +68,8 @@ function App() {
                 <Route path='/institute-page1' element={<Wrapper><InstitutePage1/></Wrapper>} /> 
                 <Route path='/institute-dashboard' element={<Wrapper><InstituteDashboard/></Wrapper>} /> 
                 <Route path='/trade-analytics/:id' element={<Wrapper><TradeAnalytics /></Wrapper>} />
-                <Route path='/chart-views' element={<Wrapper><ChartViews/></Wrapper>} />
+                <Route path='/chart-views' element={<UnderConstruction/>} />
+                {/* <Route path='/chart-views' element={<Wrapper><ChartViews /></Wrapper>} /> */}
                 <Route path='/signin' element={<Signin />} />
                 <Route path='/signup' element={<Signup />} />
                 <Route path='/early-access' element={<EarlyAccess />} />

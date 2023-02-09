@@ -49,7 +49,7 @@ export class Field extends Component {
     }
 
     reset() {
-        this.setValue(this.defaultValue);
+        this.set(this.defaultValue);
     }
 
     error(err) {

@@ -19,8 +19,9 @@ import { useNavigate } from 'react-router-dom';
 import { useUI } from '../contexts/UIContext';
 import { useFilter } from '../contexts/FilterContext';
 import { API_URL } from '../config';
-import { classNames } from '../utils';
+import { classNames, round, safeNumber } from '../utils';
 import Pagination from '../elements/Pagination';
+import axios from 'axios';
  
 function Dashboard() {  
     let data2 = doughnutChartData(['0 Wins', '0 Losses'],[50, 50])
@@ -45,34 +46,45 @@ function Dashboard() {
     
     // const [dataLoading, ]
 
-    const [start, setStart] = useState(0)
-    const [limit, setLimit] = useState(25)
+    const [limit, setLimit] = useState(0)
+    const [tradesLoading, setTradesLoading] = useState(false)
 
     let tabView = useRef()
     let tradeTable = useRef()
     let calendar = useRef()
     let openTable = useRef()
 
-    const { isSigned, isFirstSigned, post, getAuth } = useAPI()
+    const { isSigned, isFirstSigned, post, getAuth, getTradeTable } = useAPI()
     const { toast, setLoading } = useUI()
     const { filters } = useFilter()
     const navigate = useNavigate()
 
-    function showNextTrades(){
-        setStart(start+limit)
+    function showTradeTable(start = 0, size = 25){
+        if (isSigned && !isFirstSigned){
+
+            setTradesLoading(true)
+            tradeTable.current.loading(true)
+            tradeTable.current.removeAll()
+            getTradeTable(filters, start, size).then(response => {
+                for (var i in response.data) {
+                    let trade = response.data[i]
+                    tradeTable.current.add(trade.status, trade.entryDate, trade.symbol, trade.netPnl, trade.roi, trade.tradeType, trade.quantity, 'Fib', trade.entryTime, trade.entryPrice, trade.exitTime, trade.exitPrice, trade.id)
+                }
+            }).catch(err => {
+                toast.error("Somthing went wrong", "Trade table is not loaded.")
+            }).finally(() => {
+                tradeTable.current.loading(false)
+                setTradesLoading(false)
+            })
+        }
     }
 
     function showData(){
-        tradeTable.current.removeAll()
         openTable.current.removeAll()
         post(API_URL+'/dashboard', filters , getAuth()).then(response => {
             let data = response.data
-            let trades = data.tradesTable
             let openTrades = data.openTrades
-            for(var i in trades){
-                let trade = trades[i]
-                tradeTable.current.add(trade.status, trade.entryDate, trade.symbol, trade.netPnl, trade.roi, trade.tradeType, trade.quantity, 'Fib', trade.entryTime, trade.entryPrice, trade.exitTime, trade.exitPrice, trade.id)
-            }
+            setLimit(data.totalTrades)
             setCumulativePLData(areaGraphData(...data.cumulativePnl))
             setTotalNetPnl(data.totalNetPnl)
             setAvgLosers(data.returns.losers / data.losers)
@@ -102,8 +114,13 @@ function Dashboard() {
     }
 
     useEffect(() => {
-        showData()
-    }, [start, filters])
+        console.log();
+        if (isSigned && !isFirstSigned) {
+            showTradeTable()
+            showData()
+            setLoading(false)
+        }
+    }, [filters, isSigned, !isFirstSigned])
 
     useEffect(() => {
         setLoading(true)
@@ -112,7 +129,8 @@ function Dashboard() {
         }else if (isSigned && isFirstSigned){
             navigate('/settings')
             toast.info('Setup your profile', 'First you need to setup user user profile details.')
-        }else if (isSigned){
+        }else if(isSigned){
+            setLoading(false)
         }
     }, [isSigned, isFirstSigned])
     return (
@@ -151,7 +169,7 @@ function Dashboard() {
                                 <div className='font-bold text-sm'>Winrate by trades</div>
                             </div>
                             <div style={{height:'100px'}}>
-                                <Doughnut data={winrateData} options={doughnutChartOptions} plugins={[doughnutChartTextPlugin((100*winners / totalTrades)+'%', '#22c55e')]}/>
+                                <Doughnut data={winrateData} options={doughnutChartOptions} plugins={[doughnutChartTextPlugin('#22c55e')]}/>
                             </div>
                         </Card>
                         <Card className='h-1/2'>
@@ -160,7 +178,7 @@ function Dashboard() {
                                 <div className='font-bold text-sm'>Winrate by days</div>
                             </div>
                             <div style={{height:'100px'}}>
-                                <Doughnut data={winrateByDayData} options={doughnutChartOptions} plugins={[doughnutChartTextPlugin('80%', '#22c55e')]}/>
+                                <Doughnut data={winrateByDayData} options={doughnutChartOptions} plugins={[doughnutChartTextPlugin('#22c55e')]}/>
                             </div>
                         </Card>
                     </div>
@@ -168,8 +186,8 @@ function Dashboard() {
                         <div className='flex flex-col h-full'>
                             <div className='flex mb-5'>
                                 <TabBar className='flex' view={tabView} adapter={simpleTabAdapter}>
-                                    <Tab id='cumulative-pl' label='Cumulative P&L' />
-                                    <Tab id='dialy-pl' label='Dialy P&L' active />
+                                    <Tab id='cumulative-pl' label='Cumulative P&L' active />
+                                    <Tab id='dialy-pl' label='Dialy P&L'  />
                                 </TabBar>
                             </div>
                             <div className='grow'>
@@ -196,7 +214,7 @@ function Dashboard() {
                         onClick={(items) => { navigate('/trade-analytics/'+items[items.length-1])}}/>
                 </div>
                 <div className='mt-2'>
-                    <Pagination className='w-fit mx-auto' limit={120}/>
+                    <Pagination className='w-fit mx-auto' limit={limit} onChange={showTradeTable} loading ={tradesLoading}/>
                 </div>
             </Card>
             <Insightes className='w-full md:w-1/2 lg:w-1/4 order-4 md:order-2 lg:order-4' items={insights}/>

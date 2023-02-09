@@ -170,6 +170,10 @@ export default function APIProvider({ children }) {
         return post(API_URL+'/trade/update', {trade}, getAuth())
     }
 
+    function getTradeTable(filters, start, size){
+        return post(API_URL+'/trades-table', {filters, start, size}, getAuth())
+    }
+
     const value = {
         signup,
         signin,
@@ -182,6 +186,7 @@ export default function APIProvider({ children }) {
         uploadImportTrade,
         deleteTradeHistory,
         downloadTradeHistory,
+        getTradeTable,
         updateTrade,
         getFilters,
         getTradeHistories, 
