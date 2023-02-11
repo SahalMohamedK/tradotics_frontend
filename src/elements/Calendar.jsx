@@ -75,7 +75,7 @@ export class Calendar extends Component {
     
     setYear(year){
         let newDate = this.state.selectedDate;
-        newDate.setYear(1990+year)
+        newDate.setYear(1990+parseInt(year))
         this.setDate(newDate)
     }
 

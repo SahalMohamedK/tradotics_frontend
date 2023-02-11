@@ -49,7 +49,7 @@ export function addTradeHistoryTableAdapter(table, brocker, portfolio, type, cre
 }
 
 export function dashboardTableAdapter(table, status, date, symbol, netPL, ROI, side, volume, setup, entryTime, entryPrice, exitTime, exitPrice){
-    return [dual(status, 'Win', 'Loss'), date, symbol, currency(netPL), percentage(ROI), dual(side == 'buy', 'Long', 'Short'), volume, setup, entryTime, currency(entryPrice), exitTime, currency(exitPrice)]
+    return [dual(status, 'Win', 'Loss'), date, symbol, currency(netPL), percentage(ROI), dual(side == 'buy', 'Long', 'Short'), volume, setup, entryTime, currency(entryPrice, false), exitTime, currency(exitPrice, false)]
 }
 
 export function dashboardOpenPositionsTableAdapter(table, entryData, symbol, side, volume){

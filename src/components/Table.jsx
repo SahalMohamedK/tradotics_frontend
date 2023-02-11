@@ -72,7 +72,7 @@ export class Table extends Component {
                     !this.state.loading && isEmpty(this.state.data) &&
                     <div className='center text-red-500'>
                         <Icon className='mx-auto' icon={faTriangleExclamation} />
-                        <div className='text-sm'>No trade data is loaded</div>
+                        <div className='text-sm whitespace-nowrap'>{hasValue(this.props.emptyMessage, 'No data is available')}</div>
                     </div>
                 }
                 {

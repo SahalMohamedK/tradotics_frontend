@@ -18,3 +18,7 @@ export function noTradeHistoriesError(err){
         return False
     }
 }
+
+export function networkError(err){
+    return err.code === "ERR_NETWORK"
+}

@@ -6,20 +6,25 @@ import IconBtn from '../components/IconBtn'
 
 export default function Pagination({className, size = 25, limit = 25, onChange=()=>{}, loading = false}) {
   const [start, setStart] = useState(0)
+  const [isFirst, setIsFirst] = useState(true)
 
   useEffect(() => {
-    onChange(start, size)
+    if(!isFirst){
+      onChange(start, size)
+    }
   }, [start])
 
   function prev(){
     if((start+1)-size>0){
       setStart(start-size)
+      setIsFirst(false)
     }
   }
 
   function next(){
     if((start+1)+size<=limit){
       setStart(start+size)
+      setIsFirst(false)
     }
   }
 
@@ -31,7 +36,7 @@ export default function Pagination({className, size = 25, limit = 25, onChange=(
             icon={faAngleLeft}
             size='sm'
             onClick={prev}
-            disabled = {start-size <= 0 || loading}
+            disabled = {start-size+1 <= 0 || loading}
             box/>
           <div className='bg-secondary-800 material h-6 rounded-lg flex items-center'>
           <div className='mx-2 text-xs'>{start+1} - {start + size <= limit ? start + size: limit} / {limit}</div>
@@ -41,7 +46,7 @@ export default function Pagination({className, size = 25, limit = 25, onChange=(
             icon={faAngleRight}
             size='sm'
             onClick={next}
-            disabled={start + size > limit || loading}
+            disabled={start + size+1 > limit || loading}
             box />
       </div>
     </div>

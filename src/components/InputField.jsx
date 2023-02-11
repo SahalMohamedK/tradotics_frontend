@@ -11,6 +11,14 @@ class InputField extends Field {
         this.state = {
             type: this.props.type
         }
+
+        this.onKeyPress = this.onKeyPress.bind(this)
+    }
+
+    onKeyPress(e) {
+        if (e.key == 'Enter' && this.props.onEnter) {
+            this.props.onEnter();
+        }
     }
 
     field(){

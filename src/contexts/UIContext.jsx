@@ -17,6 +17,7 @@ export function useUI(){
 export default function UIProvider({children}) {
     const [loading, setLoading] = useState(true)
     const [confirmData, setConfirmData] = useState({})
+    const [extraData, setExtraData] = useState({})
 
     let confirmDialog = useRef()
     let toastRef = useRef()
@@ -38,7 +39,8 @@ export default function UIProvider({children}) {
             error: (...args) => toastRef.current.error(...args),
             warning: (...args) => toastRef.current.warning(...args),
             hide: (...args) => toastRef.current.hide(...args)
-        }
+        },
+        setExtraData
     }
 
   return (

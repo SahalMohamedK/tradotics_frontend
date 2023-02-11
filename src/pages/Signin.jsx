@@ -11,17 +11,14 @@ import { useNavigate } from 'react-router-dom';
 import Button from '../components/Button'
 import Header from '../elements/Header'
 import { Form } from '../utils'
+import { networkError } from '../libs/errors'
 
 export default function Signin() {
     const [isSignin, setIsSignin] = useState(false)
 
-
     const { signin, isSigned, isFirstSigned } = useAPI()
     const { toast, setLoading } = useUI()
     const navigate = useNavigate()
-
-    let emailRef = useRef()
-    let passwordRef = useRef()
 
     let form = new Form()
 
@@ -32,10 +29,10 @@ export default function Signin() {
                 toast.success('Welcome back!', 'You have successfully logged into Tradotics.')
                 setIsSignin(false)
             }).catch((err) => {
-                if (err.code === "ERR_NETWORK") {
+                if (networkError(err)) {
                     toast.error('Server error!', 'Somthing went wrong. Check your internet connection.')
-                } else if (err.code === "ERR_BAD_REQUEST") {
-                    toast.error('Incorrect credentials!', err.message)
+                } else if (err.code === "ERR_BAD_REQUEST") {  
+                    toast.error('Incorrect credentials!', 'You entered invalid username/password')
                     form.error(err.response.data)
                 } else {
                     toast.error('Somthing went wrong!', 'You need to try sometimes.')
@@ -52,8 +49,8 @@ export default function Signin() {
             if (isFirstSigned) {
                 navigate('/settings')
                 toast.info('Setup your profile', 'First you need to setup user user profile details.')
-            }else{
-                toast.success('Signin successfully', 'You are already signed in.')
+            } else {
+                toast.success('Welcome back!', 'You have successfully logged into Tradotics.')
                 navigate('/dashboard');
             }
         } else if (isSigned === false) {

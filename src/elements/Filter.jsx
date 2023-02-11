@@ -16,6 +16,8 @@ export function Filter({className, label, onFilterSet}) {
   const { setFilters } = useFilter()
   const { getFilters } = useAPI()
   const [filters, _setFilters] = useState([])
+  const [categoryQuery, setCategoryQuery] = useState('')
+  const [filterQuery, setFilterQuery] = useState('')
 
   let buttonRef = useRef()
 
@@ -164,17 +166,23 @@ export function Filter({className, label, onFilterSet}) {
                             onClick={(e) => setSelection({type: e.target.checked?'saf':'uaf'})}
                           />
                         </div>
-                      ]}/>
+                      ]}
+                      onChange={setCategoryQuery}/>
                     <div className='md:h-[40vh] overflow-y-auto mt-2'>
                       <TabBar view={tabView} adapter={filterTabAdapter} defaultTab={0}>
                         {objectMap(filters, ([label], i)=>
-                          <Tab key={i} id={i} label={label} number={selection[i] && selection[i].size}/>
+                          {
+                            if (label.toLowerCase().replace(/\s+/g, '').includes(categoryQuery.toLowerCase().replace(/\s+/g, ''))) {
+                              return <Tab key={i} id={i} label={label} number={selection[i] && selection[i].size}/>
+                            }
+
+                          }
                         )}
                       </TabBar>
                     </div>
                   </div>
                   <div className='md:w-1/3 border-b py-2 md:border-b-0 md:py-0 md:border-r md:px-3 border-secondary-700'>
-                    <TabView ref={tabView}>
+                    <TabView ref={tabView} onChange={() => setFilterQuery('')}>
                       {objectMap(filters, ([label, options], i) => 
                         <Tab key={i} id={i}>
                           <InputField icon={faMagnifyingGlass} innerClassName='bg-secondary-900' label='Filter'
@@ -186,16 +194,20 @@ export function Filter({className, label, onFilterSet}) {
                                   checked={selection[i] && len(selection[i]) === len(filters[i][1])} />
                               </div>
                             ]}
-                          />
+                            onChange = {setFilterQuery}
+                            value = {filterQuery}/>
                           <div className='md:h-[40vh] overflow-y-auto mt-2'>
-                            {objectMap(options, (option, j) =>
-                              <div key={j} className='flex items-center space-x-2 text-sm px-3 py-1 my-1 text-secondary-500 hover:text-white rounded duration-200 hover:bg-secondary-700 group'>
-                                <input type='checkbox' className='!ring-offset-0 h-4 w-4 rounded bg-secondary-900 border-0 focus:outline-none'
-                                  onChange={(e) => setSelection({ type: (e.target.checked ? 'sf' : 'uf'), i, j })}
-                                  checked={selection[i] && selection[i].has(j)}
-                                />
-                                <div>{option}</div>
-                              </div>
+                            {objectMap(options, (option, j) =>{
+                              if (option.toLowerCase().replace(/\s+/g, '').includes(filterQuery.toLowerCase().replace(/\s+/g, ''))) {
+                                return <div key={j} className='flex items-center space-x-2 text-sm px-3 py-1 my-1 text-secondary-500 hover:text-white rounded duration-200 hover:bg-secondary-700 group'>
+                                  <input type='checkbox' className='!ring-offset-0 h-4 w-4 rounded bg-secondary-900 border-0 focus:outline-none'
+                                    onChange={(e) => setSelection({ type: (e.target.checked ? 'sf' : 'uf'), i, j })}
+                                    checked={selection[i] && selection[i].has(j)}
+                                  />
+                                  <div>{option}</div>
+                                </div>
+                              }
+                            }
                             )}
                           </div>
                         </Tab>

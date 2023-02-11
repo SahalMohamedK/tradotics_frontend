@@ -1,6 +1,5 @@
 import React, { Component, useEffect, useState } from "react";
-import { classNames } from "../utils";
-import Icon from "./Icon";
+import { classNames, hasValue } from "../utils";
 
 export function TabBar({children, className, tabClassName, view, adapter = ()=>{}, defaultTab}){
     const [tabs, setTabs] = useState([])
@@ -49,6 +48,7 @@ export class TabView extends Component{
 
     setView(id){
         this.setState({curTab: id})
+        hasValue(this.props.onChange, () => {})(id)
     }
 
     render(){

@@ -4,7 +4,7 @@ import { Bar, Doughnut, Line } from 'react-chartjs-2'
 import { simpleTabAdapter } from '../adapters/tabs';
 import { Tab, TabBar, TabView } from '../components/Tab';
 import { dashboardOpenPositionsTableAdapter, dashboardTableAdapter, simpleTableAdapter } from '../adapters/table';
-import { faCalendar, faClipboardList, faCoins, faSliders, faStopwatch, faZap } from '@fortawesome/free-solid-svg-icons';
+import { faArrowsRotate, faCalendar, faClipboardList, faCoins, faSliders, faStopwatch, faZap } from '@fortawesome/free-solid-svg-icons';
 import { doughnutChartOptions, doughnutChartData, areaGraphOptions, areaGraphData, doughnutChartTextPlugin, barGraphOptions, barGraphData } from '../libs'
 import Icon from '../components/Icon';
 import Card from '../components/Card'
@@ -22,6 +22,9 @@ import { API_URL } from '../config';
 import { classNames, round, safeNumber } from '../utils';
 import Pagination from '../elements/Pagination';
 import axios from 'axios';
+import Button from '../components/Button';
+import Spinner from '../components/Spinner';
+import IconBtn from '../components/IconBtn';
  
 function Dashboard() {  
     let data2 = doughnutChartData(['0 Wins', '0 Losses'],[50, 50])
@@ -43,8 +46,9 @@ function Dashboard() {
     const [pnlByMonths, setPnlByMonths] = useState([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     const [pnlBySetup, setPnlBySetup] = useState([0, 0, 0, 0, 0, 0, 0])
     const [pnlByDuration, setPnlByDuration] = useState([0, 0, 0, 0, 0])
+    const [isDemo, setIsDemo] = useState(true)
     
-    // const [dataLoading, ]
+    const [dataLoading, setDataLoading] = useState(true)
 
     const [limit, setLimit] = useState(0)
     const [tradesLoading, setTradesLoading] = useState(false)
@@ -61,7 +65,6 @@ function Dashboard() {
 
     function showTradeTable(start = 0, size = 25){
         if (isSigned && !isFirstSigned){
-
             setTradesLoading(true)
             tradeTable.current.loading(true)
             tradeTable.current.removeAll()
@@ -106,7 +109,8 @@ function Dashboard() {
             setPnlBySetup(data.pnlBySetup)
             setPnlByDuration(data.pnlByDuration)
             setDialyPLData(barGraphData(...data.dialyPnl))
-            setLoading(false)
+            setIsDemo(data.isDemo)
+            setDataLoading(false)
 
         }).catch(err => {
             console.log(err)
@@ -114,13 +118,12 @@ function Dashboard() {
     }
 
     useEffect(() => {
-        console.log();
         if (isSigned && !isFirstSigned) {
+            setDataLoading(true)
             showTradeTable()
             showData()
-            setLoading(false)
         }
-    }, [filters, isSigned, !isFirstSigned])
+    }, [filters, isSigned, isFirstSigned])
 
     useEffect(() => {
         setLoading(true)
@@ -133,8 +136,27 @@ function Dashboard() {
             setLoading(false)
         }
     }, [isSigned, isFirstSigned])
-    return (
-        <div className='md:flex flex-wrap mt-16'>
+    return (<>
+        { dataLoading &&
+            <div className='h-full pt-16 relative'>
+                <div className='center'>
+                    <Spinner className='w-10 h-10 mx-auto'/>
+                    <div>Loading data...</div>
+                </div>
+            </div>
+        }
+        <div className={classNames('md:flex flex-wrap mt-16', dataLoading?'hidden':'')}>
+            {isDemo && 
+                <Card className='w-full' innerClassName='flex items-center !py-10'>
+                    <div className='ml-10'>
+                        <div className='text-xl font-bold text-indigo-500'>Welcome! Sahal Mohamed</div>
+                        <div className=''>
+                            We give you a demo trade data to understand how Tradotics work.
+                        </div>
+                    </div>
+                    <Button className='primary-btn h-fit ml-auto mr-10' to='/add-trades'>Add trades</Button>
+                </Card>
+            }
             <div className='w-full lg:w-2/3 flex flex-col order-1'>
                 <div className='md:flex'>
                     <ProgressCard className='w-full md:w-1/4' icon={faZap} label='Tradotics scrore' value={5}/>
@@ -184,11 +206,12 @@ function Dashboard() {
                     </div>
                     <Card className='w-full md:w-3/4'>
                         <div className='flex flex-col h-full'>
-                            <div className='flex mb-5'>
+                            <div className='flex mb-5 items-center justify-between'>
                                 <TabBar className='flex' view={tabView} adapter={simpleTabAdapter}>
                                     <Tab id='cumulative-pl' label='Cumulative P&L' active />
                                     <Tab id='dialy-pl' label='Dialy P&L'  />
                                 </TabBar>
+                                <IconBtn className='secondary-btn !w-7 !h-7' icon={faArrowsRotate} box/>
                             </div>
                             <div className='grow'>
                                 <TabView ref={tabView} className='lg:!h-full w-full' style={{height: '40vh'}}>
@@ -209,9 +232,11 @@ function Dashboard() {
             </Card>
             <Card className='w-full lg:w-3/4 order-3 md:order-4 lg:order-3'>
                 <div className='overflow-auto h-96'>
-                    <Table ref={tradeTable} headers={['Status','Date', 'Symbol', 'Net P&L', 'ROI', 'Side', 'Volume', 'Setup', 'Entry time', 'Entry price', 'Exit time', 'Exit price']}
-                            adapter={dashboardTableAdapter} onChange={(data) => setExecutionsNumber(data.length)}
-                        onClick={(items) => { navigate('/trade-analytics/'+items[items.length-1])}}/>
+                    <Table 
+                        ref={tradeTable} 
+                        headers={['Status','Date', 'Symbol', 'Net P&L', 'ROI', 'Side', 'Volume', 'Setup', 'Entry time', 'Entry price', 'Exit time', 'Exit price']}
+                        adapter={dashboardTableAdapter} 
+                        onClick={(items) => {navigate('/trade-analytics/'+items[items.length-1])}}/>
                 </div>
                 <div className='mt-2'>
                     <Pagination className='w-fit mx-auto' limit={limit} onChange={showTradeTable} loading ={tradesLoading}/>
@@ -235,11 +260,15 @@ function Dashboard() {
                     <div className='font-bold text-lg'>Open positions</div>
                 </div>
                 <div className='overflow-auto grow h-0'>
-                    <Table ref={openTable} headers={['Date', 'Symbol', 'Side', 'Volume']} adapter={dashboardOpenPositionsTableAdapter} />
+                    <Table 
+                        ref={openTable} 
+                        headers={['Date', 'Symbol', 'Side', 'Volume']} 
+                        adapter={dashboardOpenPositionsTableAdapter}
+                        emptyMessage='There is no open trades'/>
                 </div>
             </Card>
         </div>
-    )
+    </>)
 }
 
 export default Dashboard

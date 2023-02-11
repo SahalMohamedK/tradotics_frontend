@@ -8,11 +8,11 @@ let primaryColor = '#6366f1'
 let blueColor = '#1c64f2';
 let yellowColor = '#eab308'
 
-let greenGradient = [[0, hexToRgba(greenColor, 0)], [1, greenColor]]
-let redGradient = [[0, redColor], [1, hexToRgba(redColor, 0)]]
-let primaryGradient = [[0, hexToRgba(primaryColor, 0)], [0.2, hexToRgba(primaryColor, 0.1)], [1, hexToRgba(primaryColor, 0.50)]]
-let blueLightColor = 'rgba(28, 100, 242, 0.5)';
-let opacity0 = 'rgba(0,0,0,0)'
+// let greenGradient = [[0, hexToRgba(greenColor, 0)], [1, greenColor]]
+// let redGradient = [[0, redColor], [1, hexToRgba(redColor, 0)]]
+// let primaryGradient = [[0, hexToRgba(primaryColor, 0)], [0.2, hexToRgba(primaryColor, 0.1)], [1, hexToRgba(primaryColor, 0.50)]]
+// let blueLightColor = 'rgba(28, 100, 242, 0.5)';
+// let opacity0 = 'rgba(0,0,0,0)'
 
 function linearGradient(colorStops = [], orient = 'v'){
     return (context) => {
@@ -108,12 +108,12 @@ export const barGraphOptions = {
     },
 };
 
-export function barGraphData(labels, data){
+export function barGraphData(labels, data, positiveColor = greenColor, negativeColor=redColor){
     return {
         labels: labels,
         datasets: [{
             data: data,
-            backgroundColor: data.map(i => i>=0?greenColor:redColor),
+            backgroundColor: data.map(i => i>=0?positiveColor:negativeColor),
             barPercentage: 0.75,
             categoryPercentage: 1,
             borderRadius: 5,
@@ -192,9 +192,6 @@ export const areaGraphOptions = {
         },
         zoom: {
             zoom: {
-                wheel: {
-                    enabled: true,
-                },
                 drag: {
                     enabled: true
                 },

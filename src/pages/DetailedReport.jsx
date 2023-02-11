@@ -16,7 +16,10 @@ import { useFilter } from '../contexts/FilterContext';
 import { useAPI } from '../contexts/APIContext';
 import { API_URL } from '../config';
 import { useNavigate } from 'react-router-dom';
-import { round } from '../utils';
+import { classNames, round } from '../utils';
+import { primaryColor } from '../core/consts/colors'
+import Pagination from '../elements/Pagination';
+import Spinner from '../components/Spinner';
 
 export default function DetailedJournal() {
     const [tableNumber, setTableNumber] = useState(0)
@@ -127,10 +130,33 @@ export default function DetailedJournal() {
     let priceDistributionTable = useRef()
     let symbolDistributionTable = useRef()
 
+    const [limit, setLimit] = useState(0)
+    const [tradesLoading, setTradesLoading] = useState(false)
+    const [dataLoading, setDataLoading] = useState(true)
+
     const { setLoading } = useUI()
     const { filters } = useFilter()
-    const { isSigned, isFirstSigned, post, getAuth } = useAPI() 
+    const { isSigned, isFirstSigned, post, getAuth, getTradeTable } = useAPI() 
     const navigate = useNavigate()
+
+    function showTradeTable(start = 0, size = 25) {
+        if (isSigned && !isFirstSigned) {
+            setTradesLoading(true)
+            tradeTable.current.loading(true)
+            tradeTable.current.removeAll()
+            getTradeTable(filters, start, size).then(response => {
+                for (var i in response.data) {
+                    let trade = response.data[i]
+                    tradeTable.current.add(trade.status, trade.entryDate, trade.symbol, trade.netPnl, trade.roi, trade.tradeType, trade.quantity, 'Fib', trade.entryTime, trade.entryPrice, trade.exitTime, trade.exitPrice, trade.id)
+                }
+            }).catch(err => {
+                toast.error("Somthing went wrong", "Trade table is not loaded.")
+            }).finally(() => {
+                tradeTable.current.loading(false)
+                setTradesLoading(false)
+            })
+        }
+    }
 
     function showData() {
         tradeTable.current.removeAll()
@@ -144,14 +170,10 @@ export default function DetailedJournal() {
         symbolDistributionTable.current.removeAll()
         post(API_URL + '/detailed-report', filters, getAuth()).then(response => {
             let data = response.data
-            let trades = data.tradesTable
-            for (var i in trades) {
-                let trade = trades[i]
-                tradeTable.current.add(trade.status, trade.entryDate, trade.symbol, trade.netPnl, trade.roi, trade.tradeType)
-            }
             setWinners(data.winners)
             setLosers(data.losers)
             setTotalTrades(data.totalTrades)
+            setLimit(data.totalTrades)
             setReturns(data.returns)
             setTotalQuantity(data.totalQuantity)
             setDays(data.days)
@@ -162,7 +184,7 @@ export default function DetailedJournal() {
             setHighestPnl(data.highestPnl)
             setLowestPnl(data.lowestPnl)
             setHoldTimes(data.holdTimes)
-            setDateToExpiryDistribution(barGraphData(data.dateToExpiry[0], data.dateToExpiry[2]))
+            setDateToExpiryDistribution(barGraphData(data.dateToExpiry[0], data.dateToExpiry[2], primaryColor))
             setDateToExpiryPerformance(barGraphData(data.dateToExpiry[0], data.dateToExpiry[1]))
             for (var i = 0; i < data.dateToExpiry[0].length; i++) {
                 if (data.dateToExpiry[2][i] > 0){
@@ -218,15 +240,19 @@ export default function DetailedJournal() {
             setCostDistribution(data.costDistribution)
             setPriceDistribution(data.priceDistribution)
             setSymbolDistribution(data.symbolDistribution)
-            setLoading(false)
+            setDataLoading(false)
         }).catch(err => {
             console.log(err)
         })
     }
 
     useEffect(() => {
-        showData()
-    }, [filters])
+        if (isSigned && !isFirstSigned) {
+            setDataLoading(true)
+            showTradeTable()
+            showData()
+        }
+    }, [filters, isSigned, isFirstSigned])
 
     useEffect(() => {
         setLoading(true)
@@ -237,12 +263,19 @@ export default function DetailedJournal() {
             toast.info('Setup your profile', 'First you need to setup user user profile details.')
         }else if(isSigned){
             setLoading(false)
-
         }
     }, [isSigned, isFirstSigned])
 
-    return (
-        <div className='pt-16 h-full'>
+    return (<>
+        {dataLoading &&
+            <div className='h-full pt-16 relative'>
+                <div className='center'>
+                    <Spinner className='w-10 h-10 mx-auto' />
+                    <div>Loading data...</div>
+                </div>
+            </div>
+        }
+        <div className={classNames('pt-16 h-full', dataLoading ? 'hidden' : '')}>
             <div className='lg:flex mt-5 lg:mt-0 h-full'>
                 <div className='w-full lg:w-3/5 h-full overflow-auto'>
                     <TabBar className='flex mb-2 mx-2 space-x-2' view={tabView} adapter={iconTabAdapter} defaultTab='overview'>
@@ -315,14 +348,14 @@ export default function DetailedJournal() {
                                 <Tab id='date'>
                                     <div className='md:flex'>
                                         <Card className='w-full md:w-1/2'>
-                                            <div className='text-lg font-bold'>Trade distribution by Day</div>
+                                            <div className='text-lg font-bold'>Trade distribution by date</div>
                                             <div className='h-80'>
 
                                                 <Bar options={barGraphOptions} data={dateToExpiryDistribution} />
                                             </div>
                                         </Card>
                                         <Card className='w-full md:w-1/2'>
-                                            <div className='text-lg font-bold'>Performance by Day</div>
+                                            <div className='text-lg font-bold'>Performance by date</div>
 
                                             <div className='h-80'>
 
@@ -349,7 +382,7 @@ export default function DetailedJournal() {
                                 <Tab id='price' label='Price'/>
                                 <Tab id='symbol' label='Symbol'/>
                                 <Tab id='tags' label='Tags' />
-                                <Tab id='mistake' label='Tags' />
+                                <Tab id='mistake' label='Mistake' />
                             </TabBar>
                             <TabView ref={tabView3}>
                                 <Tab id='day'>
@@ -357,7 +390,7 @@ export default function DetailedJournal() {
                                         <Card className='w-full md:w-1/2'>
                                             <div className='text-lg font-bold'>Trade distribution by Day</div>
                                             <div className='h-80'>
-                                                <Bar options={barGraphOptions} data={barGraphData(DAYS,  dayDistribution[1])} />
+                                                <Bar options={barGraphOptions} data={barGraphData(DAYS,  dayDistribution[1], primaryColor)} />
                                             </div>
                                         </Card>
                                         <Card className='w-full md:w-1/2'>
@@ -379,13 +412,13 @@ export default function DetailedJournal() {
                                 <Tab id='hour'>
                                     <div className='md:flex'>
                                         <Card className='w-full md:w-1/2'>
-                                            <div className='text-lg font-bold'>Trade distribution by Day</div>
+                                            <div className='text-lg font-bold'>Trade distribution by hour</div>
                                             <div className='h-80'>
-                                                <Bar options={barGraphOptions} data={barGraphData(hourDistribution[0], hourDistribution[2])} />
+                                                <Bar options={barGraphOptions} data={barGraphData(hourDistribution[0], hourDistribution[2], primaryColor)} />
                                             </div>
                                         </Card>
                                         <Card className='w-full md:w-1/2'>
-                                            <div className='text-lg font-bold'>Performance by Day</div>
+                                            <div className='text-lg font-bold'>Performance by hour</div>
 
                                             <div className='h-80'>
 
@@ -403,13 +436,13 @@ export default function DetailedJournal() {
                                 <Tab id='setup'>
                                     <div className='md:flex'>
                                         <Card className='w-full md:w-1/2'>
-                                            <div className='text-lg font-bold'>Trade distribution by Day</div>
+                                            <div className='text-lg font-bold'>Trade distribution by setup</div>
                                             <div className='h-80'>
-                                                <Bar options={barGraphOptions} data={barGraphData(SETUPS, setupDistribution[1])} />
+                                                <Bar options={barGraphOptions} data={barGraphData(SETUPS, setupDistribution[1], primaryColor)} />
                                             </div>
                                         </Card>
                                         <Card className='w-full md:w-1/2'>
-                                            <div className='text-lg font-bold'>Performance by Day</div>
+                                            <div className='text-lg font-bold'>Performance by setup</div>
 
                                             <div className='h-80'>
 
@@ -427,13 +460,13 @@ export default function DetailedJournal() {
                                 <Tab id='duration'>
                                     <div className='md:flex'>
                                         <Card className='w-full md:w-1/2'>
-                                            <div className='text-lg font-bold'>Trade distribution by Day</div>
+                                            <div className='text-lg font-bold'>Trade distribution by duration</div>
                                             <div className='h-80'>
-                                                <Bar options={barGraphOptions} data={barGraphData(DURATIONS, durationDistribution[1])} />
+                                                <Bar options={barGraphOptions} data={barGraphData(DURATIONS, durationDistribution[1], primaryColor)} />
                                             </div>
                                         </Card>
                                         <Card className='w-full md:w-1/2'>
-                                            <div className='text-lg font-bold'>Performance by Day</div>
+                                            <div className='text-lg font-bold'>Performance by duration</div>
 
                                             <div className='h-80'>
 
@@ -451,13 +484,13 @@ export default function DetailedJournal() {
                                 <Tab id='cost'>
                                     <div className='md:flex'>
                                         <Card className='w-full md:w-1/2'>
-                                            <div className='text-lg font-bold'>Trade distribution by Day</div>
+                                            <div className='text-lg font-bold'>Trade distribution by cost</div>
                                             <div className='h-80'>
-                                                <Bar options={barGraphOptions} data={barGraphData(costDistribution[0], costDistribution[2])} />
+                                                <Bar options={barGraphOptions} data={barGraphData(costDistribution[0], costDistribution[2], primaryColor)} />
                                             </div>
                                         </Card>
                                         <Card className='w-full md:w-1/2'>
-                                            <div className='text-lg font-bold'>Performance by Day</div>
+                                            <div className='text-lg font-bold'>Performance by cost</div>
 
                                             <div className='h-80'>
 
@@ -475,13 +508,13 @@ export default function DetailedJournal() {
                                 <Tab id='price'>
                                     <div className='md:flex'>
                                         <Card className='w-full md:w-1/2'>
-                                            <div className='text-lg font-bold'>Trade distribution by Day</div>
+                                            <div className='text-lg font-bold'>Trade distribution by price</div>
                                             <div className='h-80'>
-                                                <Bar options={barGraphOptions} data={barGraphData(priceDistribution[0], priceDistribution[2])} />
+                                                <Bar options={barGraphOptions} data={barGraphData(priceDistribution[0], priceDistribution[2], primaryColor)} />
                                             </div>
                                         </Card>
                                         <Card className='w-full md:w-1/2'>
-                                            <div className='text-lg font-bold'>Performance by Day</div>
+                                            <div className='text-lg font-bold'>Performance by price</div>
 
                                             <div className='h-80'>
 
@@ -499,13 +532,13 @@ export default function DetailedJournal() {
                                 <Tab id='symbol'>
                                     <div className='md:flex'>
                                         <Card className='w-full md:w-1/2'>
-                                            <div className='text-lg font-bold'>Trade distribution by Day</div>
+                                            <div className='text-lg font-bold'>Trade distribution by symbol</div>
                                             <div className='h-80'>
-                                                <Bar options={barGraphOptions} data={barGraphData(symbolDistribution[0], symbolDistribution[2])} />
+                                                <Bar options={barGraphOptions} data={barGraphData(symbolDistribution[0], symbolDistribution[2], primaryColor)} />
                                             </div>
                                         </Card>
                                         <Card className='w-full md:w-1/2'>
-                                            <div className='text-lg font-bold'>Performance by Day</div>
+                                            <div className='text-lg font-bold'>Performance by symbol</div>
 
                                             <div className='h-80'>
 
@@ -522,18 +555,28 @@ export default function DetailedJournal() {
                                 </Tab>
                             </TabView>
                         </Tab>
-                        <Tab id='ridk'></Tab>
+                        <Tab id='risk'></Tab>
                     </TabView>
                 </div>
                 <Card className='w-full lg:w-2/5 h-full' innerClassName='flex flex-col'>
-                    <div className='overflow-auto grow '>
+                    <div className='overflow-auto grow'>
+                        <Table
+                            ref={tradeTable}
+                            headers={['Status', 'Data', 'Symbol', 'Net P&L', 'ROI', 'Side']}
+                            adapter={detailedJournelTableAdapter}
+                            onClick={(items) => { navigate('/trade-analytics/' + items[items.length - 1]) }} />
+                    </div>
+                    <div className='mt-2'>
+                        <Pagination className='w-fit mx-auto' limit={limit} onChange={showTradeTable} loading={tradesLoading} />
+                    </div>
+                    {/* <div className='overflow-auto grow '>
                         <Table ref={tradeTable} headers={['Status','Data','Symbol','Net P&L','ROI','Side']} adapter={detailedJournelTableAdapter}
                             onChange={(data) => setTableNumber(data.length)}
                             />
                     </div>
-                    <div className='mt-2 text-xs text-center text-secondary-500'>Showing {tableNumber} trades{tableNumber>1?'s':''}. <a className='text-indigo-500' href="/trades">View all</a></div>
+                    <div className='mt-2 text-xs text-center text-secondary-500'>Showing {tableNumber} trades{tableNumber>1?'s':''}. <a className='text-indigo-500' href="/trades">View all</a></div> */}
                 </Card>
             </div>
         </div>
-    )
+    </>)
 }
