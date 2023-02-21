@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Card from '../components/Card'
 import IconBtn from '../components/IconBtn'
+import Spinner from '../components/Spinner'
 import { API_URL } from '../config'
 import { useAPI } from '../contexts/APIContext'
 import { useFilter } from '../contexts/FilterContext'
@@ -98,6 +99,7 @@ function SmallCalendar({year, month, markers = {}}){
 
 export default function CalendarViews() {
   const [year, setYear] = useState((new Date()).getFullYear())
+  const [dataLoading, setDataLoading] = useState(true)
   const [markers, setMarkers] = useState({})
 
   const { setLoading } = useUI()
@@ -106,18 +108,22 @@ export default function CalendarViews() {
   const { filters } = useFilter()
 
   function showData(){
-    post(API_URL + '/calender-views', filters, getAuth()).then(response => {
+    post(API_URL + '/views/calenders', filters, getAuth()).then(response => {
       let data = response.data
-      setMarkers(data.tradesByDays)
-      setYear(parseInt(Object.keys(data.tradesByDays)[0].substring(0,4)))
+      setMarkers(data.pnlByDates)
+      setDataLoading(false)
+      setYear(parseInt(Object.keys(data.pnlByDates)[0].substring(0, 4)))
     }).catch(err => {
       console.log(err)
     })
   }
 
   useEffect(() => {
-    showData()
-  }, [filters])
+    if (isSigned && !isFirstSigned) {
+      setDataLoading(true)
+      showData()
+    }
+  }, [filters, isSigned, isFirstSigned])
 
   useEffect(() => {
     setLoading(true)
@@ -126,12 +132,21 @@ export default function CalendarViews() {
     } else if (isSigned && isFirstSigned) {
       navigate('/settings')
       toast.info('Setup your profile', 'First you need to setup user user profile details.')
-    } else if (isSigned) {
+    } else if (isSigned && isFirstSigned === false) {
       setLoading(false)
     }
   }, [isSigned, isFirstSigned])
 
   return (
+    <>
+      { dataLoading &&
+          <div className='h-full pt-16 relative'>
+              <div className='center'>
+                  <Spinner className='w-10 h-10 mx-auto'/>
+                  <div>Loading data...</div>
+              </div>
+          </div>
+      }
     <div className='mt-16'>
         <Card>
             <div className='w-fit mx-auto flex items-center space-x-5'>
@@ -146,5 +161,6 @@ export default function CalendarViews() {
           )}
         </div>
     </div>
+    </>
   )
 }

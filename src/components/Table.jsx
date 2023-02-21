@@ -46,8 +46,8 @@ export class Table extends Component {
     }
     render() {
         return (
-            <div className={this.props.className}>
-                <table className='relative min-w-full text-center border-separate border-spacing-y-3 align-middle h-full'>
+            <div className={classNames('relative min-h-[10rem]', this.props.className)}>
+                <table className='min-w-full text-center border-separate border-spacing-y-3 align-middle h-full'>
                     <thead>
                         <tr className='sticky top-0'>
                             {this.props.headers.map((head, i) =>

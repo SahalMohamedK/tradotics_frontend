@@ -1,7 +1,7 @@
 import {  faTableColumns, faClipboard, faChartSimple, faTableCellsLarge, faGear, faPlus, faAngleUp, faScaleBalanced, faCrosshairs, faAngleDown } from '@fortawesome/free-solid-svg-icons'
 import React, {  useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { classNames } from '../utils'
+import { classNames, isEmpty } from '../utils'
 import Icon from '../components/Icon'
 import { Disclosure, Transition } from '@headlessui/react'
 
@@ -28,7 +28,7 @@ export default function Sidebar() {
 
     let row = [
             ['/dashboard', faTableCellsLarge], 
-            ['/detailed-journal', faClipboard],
+            ['/detailed-report', faClipboard],
             ['/journal', faChartSimple],
             ['/compare', faTableColumns],
         ]
@@ -41,7 +41,8 @@ export default function Sidebar() {
                         if(typeof(path) === 'object'){
                             return <Disclosure key={i} as='div' className='overflow-hidden'>
                                     {({open}) => (<>
-                                        <Disclosure.Button className='text-secondary-500 duration-200 flex items-center my-2 md:my-0 px-2 py-2 rounded-lg overflow-hidden whitespace-nowrap cursor-pointer w-full'>
+                                        <Disclosure.Button className={classNames('text-secondary-500 duration-200 flex items-center my-2 md:my-0 px-2 py-2 rounded-lg overflow-hidden whitespace-nowrap cursor-pointer w-full',
+                                            !isEmpty(path.filter(([p, l]) => location.pathname === p)) ? 'primary-material' :'text-white md:text-secondary-500 hover:text-white')}>
                                             <Icon icon={icon}/>
                                             <div className='ml-1 font-bold text-sm md:ml-5 group-hover:ml-1 duration-100'>{label}</div>                                            
                                             <Icon className={classNames('duration-200 ml-auto',open?'rotate-180':'')} icon={faAngleDown} size='sm'/>
@@ -55,7 +56,7 @@ export default function Sidebar() {
                                             <Disclosure.Panel>
                                                 {path.map(([p, l], j) => 
                                                     <Link to={p} key={j} className={classNames('hidden group-hover:flex items-center duration-200 ml-4 px-2 rounded-lg overflow-hidden whitespace-nowrap cursor-pointer',
-                                                        location.pathname === path?'active-primary-material':'text-white md:text-secondary-500 hover:text-white')}
+                                                        location.pathname === p ?'text-white':'text-secondary-500 hover:text-white')}
                                                         onClick={() => setCollaps(false)}>
                                                             <div className='h-6 w-2 border-l border-secondary-500'>
                                                                 <div className='h-3 border-b border-secondary-500'></div>
@@ -81,7 +82,7 @@ export default function Sidebar() {
                 <div className='flex justify-between'>
                     {row.map(([path, icon, onClick], i) => 
                         <Link to={path} key={i} onClick={onClick} className={classNames('h-10 w-10 relative rounded-lg duration-500 cursor-pointer',
-                            location.pathname === path?'active-primary-material':'text-white')}>
+                            location.pathname === path?'primary-material':'text-white')}>
                             <Icon className='center' icon={icon}/>
                         </Link>
                     )}

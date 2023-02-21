@@ -2,8 +2,7 @@ import React, { useRef } from 'react'
 import { iconTabAdapter } from '../adapters/tabs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Tab, TabBar, TabView } from '../components/Tab'
-import { fa1, fa2, faClock, faCode, faCoins, faCommentDollar, faCopy, faDollar, faEnvelope, faHandHoldingDollar, faLock, faMoneyBill, faPersonWalkingArrowRight, faPhone, faPlus, faPlusCircle, faSliders, faSuitcase, faTrash, faUser, faUsers } from '@fortawesome/free-solid-svg-icons'
-import { faPenToSquare } from '@fortawesome/free-solid-svg-icons'
+import { fa1, fa2, faClock, faCode, faCoins, faCommentDollar, faCopy, faDollar, faEnvelope, faHandHoldingDollar, faLock, faMoneyBill, faPen, faPersonWalkingArrowRight, faPhone, faPlus, faPlusCircle, faSuitcase, faUser, faUsers } from '@fortawesome/free-solid-svg-icons'
 import Icon from '../components/Icon'
 import Card from '../components/Card'
 import Table from '../components/Table'
@@ -18,23 +17,28 @@ import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useUI } from '../contexts/UIContext'
 import Button from '../components/Button'
-import { Form } from '../utils'
+import { Form, Curd } from '../utils'
+import { API_URL } from '../config'
 
 function Settings() {
     const [isUpdateUser, setIsUpdateUser] = useState(false)
-    const { isSigned, isFirstSigned, user, updateUser } = useAPI()
-    const { setLoading, toast } = useUI()
+    const { isSigned, isFirstSigned, user, updateUser, changePassword, post, get, getAuth } = useAPI()
+    const { setLoading, toast, dialog } = useUI()
     const navigate = useNavigate()
 
     let tabView = useRef()
     let adjustmentsDialog = useRef()
     let commissionsDialog = useRef()
     let pictureInput = useRef()
+    let portfolioTable = useRef()
 
     let userForm = new Form()
     let profileForm = new Form()
     let securityForm = new Form()
+    let portfolioForm = new Form()
     userForm.sub('profile', profileForm)
+
+    let portfolioCRUD = new Curd('/account/portfolio', 'Portfolio', toast, dialog)
 
     function uploadPicture(){
         pictureInput.current.click();
@@ -57,14 +61,42 @@ function Settings() {
         }
     }
 
+    function _changePassword(){
+        if (securityForm.isValid()){
+            changePassword(securityForm.get(true)).then(response => {
+                toast.success('Updated successfully', 'Your password is updated successfully')
+            }).catch(err => {
+                if (err.response){
+                    securityForm.error(err.response.data)
+                }else{
+                    toast.error('Updat failed', 'Your password is not updated. Try again later')
+                }
+            })
+        }
+    }
+
+    function getPortfolio(){
+        portfolioForm.reset()
+        portfolioTable.current.removeAll()
+        portfolioCRUD.read().then(response => {
+            response.data.forEach(portfolio => {
+                portfolioTable.current.add(portfolio)
+            })
+        }).catch(err => {
+
+        })
+    }
+
     useEffect(() => {
         if (isSigned === false) {
             navigate('/signin')
-        } else {
+        } else if (isSigned === true) {
             setLoading(false)
+            getPortfolio()
+
         }
         userForm.set(user)
-    }, [isSigned, isFirstSigned, user])
+    }, [isSigned])
 
     return (
         <div className='h-full py-16 lg:pb-0'>
@@ -128,8 +160,11 @@ function Settings() {
                 </div>
             </Dialog>
             <div className='md:flex md:space-x-2 pt-5 h-full'>
-                <TabBar className='flex w-full overflow-auto md:overflow-visible whitespace-nowrap md:block mb-2 md:mb-0 mx-2 md:w-1/4 lg:w-1/5' view={tabView} adapter={iconTabAdapter}>
-                    <Tab id='account' icon={faUser} label='Account' active />
+                <TabBar className='flex w-full overflow-auto md:overflow-visible whitespace-nowrap md:block mb-2 md:mb-0 mx-2 md:w-1/4 lg:w-1/5' 
+                    view={tabView} 
+                    adapter={iconTabAdapter}
+                    defaultTab='account'>
+                    <Tab id='account' icon={faUser} label='Account' />
                     <Tab id='security' icon={faLock} label='Security' />
                     <Tab id='billing' icon={faMoneyBill} label='Billing & Plans' />
                     <Tab id='refer' icon={faCommentDollar} label='Refer and earn' />
@@ -189,10 +224,10 @@ function Settings() {
                             </div>
                             <InputField ref={securityForm.ref} className='md:w-1/2 mb-3' label='Old password' type='password' icon={faLock} />
                             <div className='md:flex md:space-x-2'>
-                                <InputField ref={securityForm.ref} className='w-full mb-3' label='New password' type='password' icon={faLock} />
-                                <InputField ref={securityForm.ref} className='w-full mb-3' label='Confirm new password' type='password' icon={faLock} />
+                                <InputField ref={securityForm.ref} className='w-full mb-3' name='password' label='New password' type='password' icon={faLock} />
+                                <InputField ref={securityForm.ref} className='w-full mb-3' name='rePassword' label='Confirm new password' type='password' icon={faLock} />
                             </div>
-                            <button href="#" className="duration-200 bg-indigo-500 text-white px-4 py-1 rounded active:bg-indigo-900 hover:bg-indigo-700 mb-1 mr-1">Save</button>
+                            <button href="#" className="duration-200 bg-indigo-500 text-white px-4 py-1 rounded active:bg-indigo-900 hover:bg-indigo-700 mb-1 mr-1" onClick={_changePassword}>Change</button>
 
                         </Card>
                     </Tab>
@@ -273,12 +308,11 @@ function Settings() {
                             <div className='md:flex md:space-x-5'>
                                 <div className='w-full md:w-3/4'>
                                     <div className=' overflow-auto'>
-                                        <Table headers={['Name', 'Value', 'Change', 'Trade', 'Last adjustment', 'Adjustments', '']}
-                                            adapter={portfolioSettingsTableAdapter} adjustmentsDialog={adjustmentsDialog}
-                                            data={[
-                                                ['Swing equity', 6013.50, 0.93, 40, 2000, 4, 4],
-                                                ['Intraday', 3013, 0.43, 40, -300, 4, 10]
-                                            ]} />
+                                        <Table ref={portfolioTable}
+                                            headers={['Name', 'Value', 'Change', 'Trade', 'Last adjustment', 'Adjustments', '']}
+                                            adapter={portfolioSettingsTableAdapter} 
+                                            adjustmentsDialog={adjustmentsDialog} 
+                                            onDelete={(portfolio) => portfolioCRUD.delete(portfolio).then(getPortfolio)}/>
                                     </div>
                                 </div>
                                 <div className='w-full md:w-1/4'>
@@ -296,9 +330,9 @@ function Settings() {
                                         </div>
                                     </div>
                                     <div className='mt-4'>
-                                        <InputField className='w-full' label='Name' />
-                                        <InputField className='w-full' label='Value' type='number' />
-                                        <div className='secondary-btn mt-4 w-fit ml-auto'>
+                                        <InputField ref={portfolioForm.ref} className='w-full mb-2' label='Name' icon={faPen} required/>
+                                        <InputField ref={portfolioForm.ref} className='w-full' label='Value' type='number' icon={faDollar} required />
+                                        <div className='primary-btn mt-4 w-fit ml-auto' onClick={() => portfolioCRUD.create(portfolioForm.get(true)).then(getPortfolio)}>
                                             <Icon className='mr-1' icon={faPlus} />
                                             Add portfolio
                                         </div>

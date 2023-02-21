@@ -1,4 +1,4 @@
-import React, { useContext, useRef } from "react";
+import React, { useContext } from "react";
 import axios from 'axios'
 import { useState } from "react";
 import { useEffect } from "react";
@@ -12,7 +12,7 @@ export function useAPI() {
 
 export default function APIProvider({ children }) {
     const [isSigned, setIsSigned] = useState()
-    const [isFirstSigned, setIsSFirstSigned] = useState()
+    const [isFirstSigned, setIsFirstSigned] = useState()
     const [user, setUser] = useState({})
 
     useEffect(() => {
@@ -20,13 +20,13 @@ export default function APIProvider({ children }) {
             let data = response.data
             setUser(data)
             setIsSigned(true)
-            if (data.firstName == '' || data.firstName == '') {
-                setIsSFirstSigned(true)
+            if (data.firstName == '' || data.lastName == '') {
+                setIsFirstSigned(true)
             } else {
-                setIsSFirstSigned(false)
+                setIsFirstSigned(false)
             }
         }).catch((err) => {
-            setIsSFirstSigned(false)
+            setIsFirstSigned(false)
             setIsSigned(false)
             setUser({})
         })
@@ -68,21 +68,20 @@ export default function APIProvider({ children }) {
                 if (response.data.token) {
                     localStorage.setItem('auth_token', response.data.token)
                     getUser().then((response) => {
+                        let data = response.data
                         setIsSigned(true)
-                        setUser(response.data)
-                        setIsSFirstSigned(false)
-                    }).catch((err) => {
-                        if (err.response && err.response.status === 404) {
-                            setIsSFirstSigned(true)
-                            setIsSigned(true)
-                            setUser({})
+                        setUser(data)
+                        if (data.firstName == '' || data.lastName == '') {
+                            setIsFirstSigned(true)
                         } else {
-                            setIsSFirstSigned(false)
-                            setIsSigned(false)
-                            setUser({})
+                            setIsFirstSigned(false)
                         }
+                        resolver(response)
+                    }).catch((err) => {
+                        setIsFirstSigned(false)
+                        setIsSigned(false)
+                        setUser({})
                     })
-                    resolver(response)
                 }
             }).catch((err) => {
                 setIsSigned(false)
@@ -112,9 +111,14 @@ export default function APIProvider({ children }) {
         return new Promise((resolver, reject) => {
             put(API_URL + '/account/profile', data, getAuth()).then(response => {
                 setUser({ ...user, ...data })
+                setIsFirstSigned(false)
                 resolver(response)
             }).catch(reject)
         })
+    }
+
+    function changePassword({oldPassword, password, rePassword}){
+        return post(API_URL + '/account/change-password', {oldPassword, password, rePassword}, getAuth())
     }
 
     function getBrockers() {
@@ -142,7 +146,7 @@ export default function APIProvider({ children }) {
     }
 
     function deleteTradeHistory(id){
-        return axios.post(API_URL +'/trades/delete/histories', {'id': id}, getAuth())
+        return post(API_URL +'/trades/delete/histories', {id}, getAuth())
     }
 
     function downloadTradeHistory(id){
@@ -170,6 +174,10 @@ export default function APIProvider({ children }) {
         return post(API_URL+'/trade/update', {trade}, getAuth())
     }
 
+    function deleteTrade(id){
+        return post(API_URL+'/delete-trade', {id}, getAuth())
+    }
+
     function getTradeTable(filters, start, size){
         return post(API_URL+'/trades-table', {filters, start, size}, getAuth())
     }
@@ -180,6 +188,7 @@ export default function APIProvider({ children }) {
         signout,
         getUser,
         updateUser,
+        changePassword,
         getBrockers,
         getBrockerDetails,
         addEarlyAccessUser,
@@ -188,6 +197,7 @@ export default function APIProvider({ children }) {
         downloadTradeHistory,
         getTradeTable,
         updateTrade,
+        deleteTrade,
         getFilters,
         getTradeHistories, 
         getAuth,

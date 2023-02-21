@@ -1,6 +1,6 @@
 import { faDownload, faEdit, faPenToSquare, faPersonWalkingArrowRight, faSliders, faTrash } from "@fortawesome/free-solid-svg-icons";
 import IconBtn from "../components/IconBtn";
-import { classNames} from "../utils";
+import { classNames, round} from "../utils";
 import RatioBar from "../components/RatioBar";
 import SwitchBtn from "../components/SwitchBtn";
 
@@ -18,7 +18,7 @@ function iconBtn(icon, onClick){
 }
 
 function dual(data, positive, negative){
-    return <div className={classNames('text-xs font-bold rounded px-2 py-0.5', data?'bg-green-500/25 text-green-500':'bg-red-500/25 text-red-500')}>
+    return <div className={classNames('text-xs font-bold rounded py-0.5', data?'bg-green-500/25 text-green-500':'bg-red-500/25 text-red-500')}>
             {data?positive:negative}
         </div>
 }
@@ -48,28 +48,79 @@ export function addTradeHistoryTableAdapter(table, brocker, portfolio, type, cre
     return [brocker, portfolio, ['Import', 'Sync', 'manula'][type], dateTime(created), executions, trades, iconBtn(faDownload, () => table.props.onDownload(id)), iconBtn(faTrash, () => table.props.onDelete(id))]
 }
 
-export function dashboardTableAdapter(table, status, date, symbol, netPL, ROI, side, volume, setup, entryTime, entryPrice, exitTime, exitPrice){
-    return [dual(status, 'Win', 'Loss'), date, symbol, currency(netPL), percentage(ROI), dual(side == 'buy', 'Long', 'Short'), volume, setup, entryTime, currency(entryPrice, false), exitTime, currency(exitPrice, false)]
+export function dashboardTableAdapter(table, n, trade){
+    return [
+        n,
+        dual(trade.status, 'Win', 'Loss'), 
+        trade.entryDate, 
+        trade.symbol, 
+        currency(trade.netPnl), 
+        percentage(trade.roi), 
+        dual(trade.tradeType == 'buy', 'Long', 'Short'), 
+        trade.quantity, 
+        trade.entryTime, 
+        currency(trade.entryPrice, false), 
+        trade.exitTime, 
+        currency(trade.exitPrice, false)
+    ]
 }
 
 export function dashboardOpenPositionsTableAdapter(table, entryData, symbol, side, volume){
     return [entryData, symbol, dual(side, 'Buy', 'Sell'), currency(volume)]
 }
 
-export function detailedJournelTableAdapter(table, status, date, symbol, netPL, ROI, side){
-    return [dual(status, 'Win', 'Loss'), date, symbol, currency(netPL), percentage(ROI), dual(side == 'buy', 'Long', 'Short')]
+export function detailedJournelTableAdapter(table,n, trade){
+    return [
+        n,
+        dual(trade.status, 'Win', 'Loss'), 
+        trade.entryDate, 
+        trade.symbol, 
+        currency(trade.netPnl), 
+        percentage(trade.roi), 
+        dual(self.tradeType == 'buy', 'Long', 'Short')
+    ]
 }
 
 export function detailedJournelOptionsTableAdapter(table, type, netPL, no, cost, winrate){
-    return [type, currency(netPL), no, currency(cost), <RatioBar value={winrate} positiveValue={68} negativeValue={32} />]
+    return [
+        type, 
+        currency(netPL), 
+        no, 
+        currency(cost), 
+        <RatioBar 
+            value={0} 
+            positiveValue={100*winrate[0]/(winrate[0]+winrate[1])} 
+            negativeValue={100*winrate[1]/(winrate[0]+winrate[1])} />
+    ]
 }
 
-export function journalDialogTableAdapter(table, entryTime, exitTime, symbol, side, volume,netPL, ROI, RR){
-    return [ entryTime, exitTime, symbol, dual(side, 'Buy', 'Sell'), volume, currency(netPL), percentage(ROI), RR+'R']
+export function journalDialogTableAdapter(table, trade){
+    return [
+        trade.entryTime, 
+        trade.exitTime, 
+        trade.symbol, 
+        dual(trade.tradeType == 'buy', 'Long', 'Short'), 
+        trade.quantity, 
+        currency(trade.netPnl), 
+        percentage(trade.roi), 
+        '0R'
+    ]
 }
 
-export function executionsTableAdapter(table, date, time, side, price, quantity, position, value, PL, editOnClick){
-    return [date, time, dual(side == 'buy', 'Buy', 'Sell'), currency(price, false), quantity, position, currency(value, false), currency(PL), iconBtn(faTrash, () => table.remove(key)), iconBtn(faEdit, editOnClick)]
+export function executionsTableAdapter(table, n, order){
+    return [
+        n,
+        order.tradeDate, 
+        order.executionTime, 
+        dual(order.tradeType == 'buy', 'Buy', 'Sell'), 
+        currency(order.price, false), 
+        order.quantity, 
+        round(order.price * order.quantity, 2), 
+        currency(0, false), 
+        currency(0), 
+        iconBtn(faTrash, () => table.props.onDelete(order)), 
+        iconBtn(faEdit, () => table.props.onEdit(order))
+    ]
 }
 
 export function instituteGroupTable(table, sNo, name, winrate, profitFactor){
@@ -98,16 +149,23 @@ export function instituteRuelsTableAdapter(table, sNo, rule, value){
     ]
 }
 
-export function savedCompareTableAdapter(table, name, desc){
-    return [ name, secondaryBtn('Edit', ()=>table.props.editDialog.current.show()), desc, secondaryBtn('View'), secondaryBtn('View'), primarybtn('Apply')]
+export function savedCompareTableAdapter(table, data){
+    return [data.name, secondaryBtn('Edit', () => table.props.editDialog.current.show()), data.desc, secondaryBtn('View'), secondaryBtn('View'), primarybtn('Apply')]
 }
 
-export function popularCompareTableAdapter(table, name, desc){
-    return [name, desc, secondaryBtn('View'), secondaryBtn('View'), primarybtn('Apply')]
+export function popularCompareTableAdapter(table, data){
+    return [data.name, data.desc, secondaryBtn('View'), secondaryBtn('View'), primarybtn('Apply')]
 }
 
-export function portfolioSettingsTableAdapter(table, name, value, change, trades, lastAdjustment, adjustment){
-    return [name, currency(value), percentage(change), trades, currency(lastAdjustment), iconBtn(faSliders, () => table.props.adjustmentsDialog.current.show()), iconBtn(faTrash)]
+export function portfolioSettingsTableAdapter(table, portfolio){
+    return [
+        portfolio.name, 
+        currency(portfolio.value), 
+        percentage(0), 
+        0, 
+        currency(0), 
+        iconBtn(faSliders, () => table.props.adjustmentsDialog.current.show()), 
+        iconBtn(faTrash, () => table.props.onDelete(portfolio))]
 }
 
 export function referSettingsTableAdapter(table, no, name, status, referal, expiration){

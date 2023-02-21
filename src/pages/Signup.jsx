@@ -1,6 +1,6 @@
 import { faAt, faLock, faUser } from '@fortawesome/free-solid-svg-icons'
 import React, { useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Card from '../components/Card'
 import logoImg from '../media/logo.png'
 import InputField from '../components/InputField'
@@ -16,6 +16,7 @@ export default function Signup() {
     const [isSignup, setIsSignup] = useState()
     const { setLoading, toast } = useUI()
     const { signup } = useAPI()
+    const navigate = useNavigate()
 
     let form = new Form()
 
@@ -27,6 +28,7 @@ export default function Signup() {
                 toast.success('Welcome to Tradotics.', 'You have successfully registred into Tradotics.')
                 setIsSignup(false)
                 form.reset()
+                navigate('/signin')
             }).catch(err => {
                 if (err.code === "ERR_NETWORK") {
                     toast.error('Server error!', 'Somthing went wrong. Check your internet connection.')
@@ -61,13 +63,13 @@ export default function Signup() {
                             <div className='text-sm text-secondary-500'>Already have an account? <Link className='text-indigo-500' to='/signin'>Signin</Link></div>
                             <div className='text-left my-5'>
                                 <InputField ref={form.ref} className='mb-2' label='Email' icon={faUser}
-                                    disabled={isSignup} required />
+                                    disabled={isSignup} onEnter={onClick} required />
                                 <InputField ref={form.ref} className='mb-2' label='Username' icon={faAt}
-                                    disabled={isSignup} required />
+                                    disabled={isSignup} onEnter={onClick} required />
                                 <InputField ref={form.ref} className='mb-2' label='Password' icon={faLock} type='password'
-                                    disabled={isSignup} required />
+                                    disabled={isSignup} onEnter={onClick} required />
                                 <InputField ref={form.ref} label='Repeat password' name='rePassword' icon={faLock} type='password'
-                                    disabled={isSignup} required />
+                                    disabled={isSignup} onEnter={onClick} required />
                             </div>
                             <div className='w-fit mx-auto pt-3'>
                                 <Button className='primary-btn w-full' onClick={onClick} loading={isSignup}>Signup</Button>

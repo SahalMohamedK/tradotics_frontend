@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react'
 import { iconTabAdapter } from '../adapters/tabs'
 import { Tab, TabBar, TabView } from '../components/Tab'
-import { faClockRotateLeft, faDownload, faFile, faFilePen, faPlusCircle, faRotate, faUserTie } from '@fortawesome/free-solid-svg-icons'
+import { faClockRotateLeft, faDownload, faFile, faFilePen, faPlusCircle, faRotate, faTrash, faUpload, faUserTie } from '@fortawesome/free-solid-svg-icons'
 import Card from '../components/Card'
 import IconBtn from '../components/IconBtn'
 import InputField from '../components/InputField'
@@ -84,7 +84,7 @@ function AddTrades() {
     }
 
     function deleteHistory(id){
-        dialog.confirm('Confirm delete', 'Are you sure to delete this trade history?', 'Delete', () => {
+        dialog.confirm('Confirm delete', faTrash, 'Are you sure to delete this trade history?', 'Delete', () => {
             deleteTradeHistory(id).then(response => {
                 toast.success('Deleted successfully', 'Your trade history is deleted successfully')
                 showTradeHistories()
@@ -114,7 +114,7 @@ function AddTrades() {
                 <TabBar className='flex flex-wrap md:block mb-2 md:mb-0 mx-2 md:w-1/4 lg:w-1/5' view={mainTV} 
                     adapter={iconTabAdapter} defaultTab='sync'>
                     <Tab id='sync' icon={faRotate} label='Sync brocker'/>
-                    <Tab id='import' icon={faDownload} label='Import trades' />
+                    <Tab id='import' icon={faUpload} label='Import trades' />
                     <Tab id='manual' icon={faFilePen} label='Manual entry' />
                     <Tab id='history' icon={faClockRotateLeft} label='History' />
                 </TabBar>
@@ -134,7 +134,7 @@ function AddTrades() {
                     <Tab id='import'>
                         <Card className='h-full'>
                             <div className='flex mb-5 items-center'>
-                                <Icon className='primary-material mr-2' icon={faDownload} size='sm' />
+                                <Icon className='primary-material mr-2' icon={faUpload} size='sm' />
                                 <div className='text-lg font-bold mr-auto'>Import trades</div>
                             </div>
                             <div className='md:flex md:space-x-2'>
@@ -161,7 +161,7 @@ function AddTrades() {
                                 className="primary-btn mb-1 mr-1" 
                                 onClick={_uploadImportTrade}
                                 loading={isImportTradeUpload}>
-                                    Save
+                                    Upload
                             </Button>
                         </Card>
                     </Tab>
@@ -171,7 +171,7 @@ function AddTrades() {
                                 <Icon className='primary-material mr-2' icon={faFilePen} size='sm' />
                                 <div className='text-lg font-bold mr-auto'>Manual entry</div>
                             </div>
-                            <TabBar className='flex' adapter={simpleTabAdapter} view={manualTabView}>
+                            <TabBar className='flex' adapter={simpleTabAdapter} view={manualTabView} defaultTab='trade'>
                                 <Tab id='trade' label='Add a trade' />
                                 <Tab id='execution' label='Add an execution' />
                             </TabBar>

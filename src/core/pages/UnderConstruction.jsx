@@ -1,7 +1,14 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useUI } from '../../contexts/UIContext'
 
 export default function UnderConstruction() {
+  let {setLoading} = useUI()
+
+  useEffect(() => {
+    setLoading(false)
+  }, [])
+
   return (
     <div className='h-full relative'>
         <div className='center text-center'>

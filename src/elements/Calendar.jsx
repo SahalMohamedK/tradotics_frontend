@@ -2,7 +2,7 @@ import { faCalendarDay, faChevronCircleLeft, faChevronCircleRight } from '@forta
 import React, { Component } from 'react'
 import IconBtn from '../components/IconBtn';
 import SelectField from '../components/SelectField'
-import { addItem, classNames, hasValue, strDate, zFill } from '../utils';
+import { addItem, classNames, hasValue, round, strDate, zFill } from '../utils';
 import { MONTHS, YEARS } from '../libs/consts'
 
 export class Calendar extends Component {
@@ -138,7 +138,7 @@ export class Calendar extends Component {
                                 amount>=0?'green-material':'red-material')}>
                             <div className={classNames('absolute h-2 w-2 rotate-45 h-center bottom-[0.75rem] translate-y-[200%]', 
                                 amount>=0?'bg-green-800':'bg-red-800')}></div>
-                            <div>${amount}</div> 
+                            <div>${round(Math.abs(amount), 2)}</div> 
                             <div className='whitespace-nowrap'> {trades} Trade{trades>1?'s':''}</div>
                         </div>
                         <span className='absolute right-2 top-1'>{n}</span>

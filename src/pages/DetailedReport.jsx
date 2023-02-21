@@ -20,89 +20,89 @@ import { classNames, round } from '../utils';
 import { primaryColor } from '../core/consts/colors'
 import Pagination from '../elements/Pagination';
 import Spinner from '../components/Spinner';
+import TradesTable from '../elements/TradesTable';
 
 export default function DetailedJournal() {
-    const [tableNumber, setTableNumber] = useState(0)
-    const [winners, setWinners] = useState(0)
-    const [losers, setLosers] = useState(0)
-    const [totalTrades, setTotalTrades] = useState(0)
-    const [returns, setReturns] = useState({})
-    const [totalQuantity, setTotalQuantity] = useState(0)
-    const [days, setDays] = useState({})
-    const [consec, setConsec] = useState([])
-    const [counts, setCounts] = useState({})
-    const [rois, setRois] = useState({})
-    const [openAndClose, setOpenAndClose] = useState([0, 0])
-    const [highestPnl, setHighestPnl] = useState(0)
-    const [lowestPnl, setLowestPnl] = useState(0)
-    const [holdTimes, setHoldTimes] = useState([])
-    const [dateToExpiryDistribution, setDateToExpiryDistribution] = useState(barGraphData([], []))
-    const [dateToExpiryPerformance, setDateToExpiryPerformance] = useState(barGraphData([], []))
-    const [dayDistribution, setDayDistribution] = useState([[], []])
-    const [hourDistribution, setHourDistribution] = useState([[], [], []])
-    const [setupDistribution, setSetupDistribution] = useState([[], []])
-    const [durationDistribution, setDurationDistribution] = useState([[], []])
-    const [costDistribution, setCostDistribution] = useState([[], [], []])
-    const [priceDistribution, setPriceDistribution] = useState([[], [], []])
-    const [symbolDistribution, setSymbolDistribution] = useState([[], [], []])
+    const [data, setData] = useState({
+        costDistribution: [[], [], [], [], []],
+        counts: [0, 0, 0],
+        dataByExpiryDate: [[], [], [], [], []],
+        dateWise: [0, 0, 0, 0, 0],
+        dayDistribution: [[], [], [], []],
+        durationDistribution: [[], [], [], []],
+        highestPnlTrade: {},
+        holdTimes: [],
+        hourDistribution: [[], [], [], []],
+        lowestPnlTrade: {},
+        maxConsec: [0, 0],
+        openAndClose: [0, 0],
+        pnlByStatus: [0, 0],
+        pnlByTradeTypes: [0, 0],
+        priceDistribution: [[], [], [], [], []],
+        countsByRoi: [0, 0, 0, 0, 0],
+        setupDistribution: [[], [], [], [], []],
+        symbolDistribution: [[], [], [], [], []],
+        totalQuantity: 0,
+    })
+    const [dataLoading, setDataLoading] = useState(true)
 
-    let data = [
+    let overViewData = [
         ["Return", [
-            ["Return on winners", FORMAT.CURRENCY, returns.winners],
-            ["Return on lossers", FORMAT.CURRENCY, returns.losers],
-            ["Return on long", FORMAT.CURRENCY, returns.long],
-            ["Return on shorts", FORMAT.CURRENCY, returns.short],
-            ["Acc balance", FORMAT.CURRENCY, (returns.winners + returns.losers) ],
-            ["Avg return / share", FORMAT.CURRENCY, (returns.winners + returns.losers)/totalQuantity],
+            ["Return on winners", FORMAT.CURRENCY, data.pnlByStatus[0]],
+            ["Return on lossers", FORMAT.CURRENCY, data.pnlByStatus[1]],
+            ["Return on long", FORMAT.CURRENCY, data.pnlByTradeTypes[0]],
+            ["Return on shorts", FORMAT.CURRENCY, data.pnlByTradeTypes[1]],
+            ["Acc balance", FORMAT.CURRENCY, (data.pnlByStatus[0] + data.pnlByStatus[1]) ],
+            ["Avg return / share", FORMAT.CURRENCY, (data.pnlByStatus[0] + data.pnlByStatus[1])/data.totalQuantity],
         ]
         ],
         ["Summary", [
-            ["Total PnL", FORMAT.CURRENCY, (returns.winners + returns.losers)],
-            ["Profit factor", FORMAT.NUMBER, Math.abs(round(returns.winners/returns.losers, 2))],
-            ["Daily volume", FORMAT.CURRENCY, totalQuantity/days.total],
-            ["Avg winners", FORMAT.CURRENCY, returns.winners/winners],
-            ["Avg Lossers", FORMAT.CURRENCY, returns.losers / losers],
-            ["Average dialy return", FORMAT.CURRENCY, (returns.winners + returns.losers)/days.total],
+            ["Total PnL", FORMAT.CURRENCY, (data.pnlByStatus[0] + data.pnlByStatus[1])],
+            ["Profit factor", FORMAT.NUMBER, Math.abs(round(data.pnlByStatus[0]/data.pnlByStatus[1], 2))],
+            ["Daily volume", FORMAT.CURRENCY, data.totalQuantity/data.dateWise[0]],
+            ["Avg winners", FORMAT.CURRENCY, data.pnlByStatus[0]/data.counts[1]],
+            ["Avg Lossers", FORMAT.CURRENCY, data.pnlByStatus[1] / data.counts[2]],
+            ["Average dialy return", FORMAT.CURRENCY, (data.pnlByStatus[0] + data.pnlByStatus[1])/data.dateWise[0]],
         ]
         ],
         ["Trades", [
-            ["Winning trades", FORMAT.NUMBER, winners],
-            ["Losing trades", FORMAT.NUMBER, losers],
-            ["Break Even trades", FORMAT.NUMBER, totalTrades-(winners+losers)],
-            ["Total num of trades", FORMAT.NUMBER, totalTrades],
-            ["Max consec win trades", FORMAT.NUMBER, consec[0]],
-            ["Max consec loss trades", FORMAT.NUMBER, consec[1]],
-            ["Closed trades", FORMAT.NUMBER, openAndClose[0]],
-            ["Open trades", FORMAT.NUMBER, openAndClose[1]],
-            ["Avg trades per day", FORMAT.NUMBER, round(totalTrades/days.total, 2)],
-            ["No of short trades", FORMAT.NUMBER, counts.short],
-            ["No of long trades", FORMAT.NUMBER, counts.long],
+            ["Winning trades", FORMAT.NUMBER, data.counts[1]],
+            ["Losing trades", FORMAT.NUMBER, data.counts[2]],
+            ["Break Even trades", FORMAT.NUMBER, data.counts[0]-(data.counts[1]+data.counts[2])],
+            ["Total num of trades", FORMAT.NUMBER, data.counts[0]],
+            ["Max consec win trades", FORMAT.NUMBER, data.maxConsec[0]],
+            ["Max consec loss trades", FORMAT.NUMBER, data.maxConsec[1]],
+            ["Open trades", FORMAT.NUMBER, data.openAndClose[0]],
+            ["Closed trades", FORMAT.NUMBER, data.openAndClose[1]],
+            ["Avg trades per day", FORMAT.NUMBER, round(data.counts[0]/data.dateWise[0], 2)],
+            ["No of short trades", FORMAT.NUMBER, data.counts[3]],
+            ["No of long trades", FORMAT.NUMBER, data.counts[4]],
         ]
         ],
         ["Return %", [
-            ["Avg % return", FORMAT.PERCENTAGE, round(rois.total/totalTrades, 2)],
-            ["Avg % on winners", FORMAT.PERCENTAGE, round(rois.winners / counts.winners, 2)],
-            ["Avg % on losses", FORMAT.PERCENTAGE, round(rois.losers / counts.losers, 2)],
-            ["Avg % on long", FORMAT.PERCENTAGE, round(rois.long / counts.long, 2)],
-            ["Avg % on short", FORMAT.PERCENTAGE, round(rois.short / counts.short, 2)],
+            ["Avg % return", FORMAT.PERCENTAGE, round(data.countsByRoi[0]/data.counts[0], 2)],
+            ["Avg % on winners", FORMAT.PERCENTAGE, round(data.countsByRoi[1] / data.counts[1], 2)],
+            ["Avg % on losses", FORMAT.PERCENTAGE, round(data.countsByRoi[2] / data.counts[2], 2)],
+            ["Avg % on long", FORMAT.PERCENTAGE, round(data.countsByRoi[3] / data.counts[3], 2)],
+            ["Avg % on short", FORMAT.PERCENTAGE, round(data.countsByRoi[4] / data.counts[4], 2)],
         ]
         ],
         ["Days", [
-            ["Total trading days", FORMAT.NUMBER, days.total],
-            ["Winning days", FORMAT.NUMBER, days.winners],
-            ["Lossing days", FORMAT.NUMBER, days.losers],
-            ["Break Even days", FORMAT.NUMBER, days.total - (days.winners + days.losers)],
-            ["Max consec win days", FORMAT.NUMBER, days.consecWin],
-            ["Max consec loss days", FORMAT.NUMBER, days.consecLoss],
+            ["Total trading days", FORMAT.NUMBER, data.dateWise[0]],
+            ["Winning days", FORMAT.NUMBER, data.dateWise[1]],
+            ["Lossing days", FORMAT.NUMBER, data.dateWise[2]],
+            ["Break Even days", FORMAT.NUMBER, data.dateWise[0] - (data.dateWise[1].winners + data.dateWise[2])],
+            ["Max consec win days", FORMAT.NUMBER, data.dateWise[3]],
+            ["Max consec loss days", FORMAT.NUMBER, data.dateWise[4]],
         ]
         ],
         ["Hold time", [
-            ["Avg hold time", FORMAT.TIME, holdTimes[0]],
-            ["Avg winners hold time", FORMAT.TIME, holdTimes[1]],
-            ["Avg lossers hold time", FORMAT.TIME, holdTimes[2]],
-            ["Avg time on long", FORMAT.TIME, holdTimes[3]],
-            ["Avg time on short", FORMAT.TIME, holdTimes[4]],
-            ["Duration of Highest profit", FORMAT.TIME, holdTimes[5]],
+            ["Avg hold time", FORMAT.TIME, data.holdTimes[0]],
+            ["Avg winners hold time", FORMAT.TIME, data.holdTimes[1]],
+            ["Avg lossers hold time", FORMAT.TIME, data.holdTimes[2]],
+            ["Avg time on long", FORMAT.TIME, data.holdTimes[3]],
+            ["Avg time on short", FORMAT.TIME, data.holdTimes[4]],
+            ["Duration of Highest profit", FORMAT.TIME, data.holdTimes[5]],
         ]
         ],
         ["risk", [
@@ -120,8 +120,7 @@ export default function DetailedJournal() {
     let tabView2 = useRef()
     let tabView3 = useRef()
     let optionsTable = useRef()
-    let tradeTable = useRef()
-    let dateToExpiryTable = useRef()
+    let dataByExpiryDateTable = useRef()
     let dayDistributionTable = useRef()
     let hourDistributionTable = useRef()
     let setupDistributionTable = useRef()
@@ -130,37 +129,13 @@ export default function DetailedJournal() {
     let priceDistributionTable = useRef()
     let symbolDistributionTable = useRef()
 
-    const [limit, setLimit] = useState(0)
-    const [tradesLoading, setTradesLoading] = useState(false)
-    const [dataLoading, setDataLoading] = useState(true)
-
     const { setLoading } = useUI()
     const { filters } = useFilter()
     const { isSigned, isFirstSigned, post, getAuth, getTradeTable } = useAPI() 
     const navigate = useNavigate()
 
-    function showTradeTable(start = 0, size = 25) {
-        if (isSigned && !isFirstSigned) {
-            setTradesLoading(true)
-            tradeTable.current.loading(true)
-            tradeTable.current.removeAll()
-            getTradeTable(filters, start, size).then(response => {
-                for (var i in response.data) {
-                    let trade = response.data[i]
-                    tradeTable.current.add(trade.status, trade.entryDate, trade.symbol, trade.netPnl, trade.roi, trade.tradeType, trade.quantity, 'Fib', trade.entryTime, trade.entryPrice, trade.exitTime, trade.exitPrice, trade.id)
-                }
-            }).catch(err => {
-                toast.error("Somthing went wrong", "Trade table is not loaded.")
-            }).finally(() => {
-                tradeTable.current.loading(false)
-                setTradesLoading(false)
-            })
-        }
-    }
-
     function showData() {
-        tradeTable.current.removeAll()
-        dateToExpiryTable.current.removeAll()
+        dataByExpiryDateTable.current.removeAll()
         dayDistributionTable.current.removeAll()
         hourDistributionTable.current.removeAll()
         setupDistributionTable.current.removeAll()
@@ -170,76 +145,101 @@ export default function DetailedJournal() {
         symbolDistributionTable.current.removeAll()
         post(API_URL + '/detailed-report', filters, getAuth()).then(response => {
             let data = response.data
-            setWinners(data.winners)
-            setLosers(data.losers)
-            setTotalTrades(data.totalTrades)
-            setLimit(data.totalTrades)
-            setReturns(data.returns)
-            setTotalQuantity(data.totalQuantity)
-            setDays(data.days)
-            setConsec(data.maxConsec)
-            setCounts(data.counts)
-            setRois(data.rois)
-            setOpenAndClose(data.openAndClose)
-            setHighestPnl(data.highestPnl)
-            setLowestPnl(data.lowestPnl)
-            setHoldTimes(data.holdTimes)
-            setDateToExpiryDistribution(barGraphData(data.dateToExpiry[0], data.dateToExpiry[2], primaryColor))
-            setDateToExpiryPerformance(barGraphData(data.dateToExpiry[0], data.dateToExpiry[1]))
-            for (var i = 0; i < data.dateToExpiry[0].length; i++) {
-                if (data.dateToExpiry[2][i] > 0){
-                    dateToExpiryTable.current.add(data.dateToExpiry[0][i], data.dateToExpiry[1][i], data.dateToExpiry[2][i], data.dateToExpiry[3][i])
+            setData(data)
+            
+            for (var i = 0; i < data.dataByExpiryDate[0].length; i++) {
+                if (data.dataByExpiryDate[2][i] > 0){
+                    dataByExpiryDateTable.current.add(
+                        data.dataByExpiryDate[0][i], 
+                        data.dataByExpiryDate[1][i], 
+                        data.dataByExpiryDate[2][i], 
+                        data.dataByExpiryDate[3][i],
+                        data.dataByExpiryDate[4][i])
                 }
             }
 
             for (var i = 0; i < DAYS.length; i++) {
                 if (data.dayDistribution[1][i] > 0){
-                    dayDistributionTable.current.add(DAYS[i], data.dayDistribution[0][i], data.dayDistribution[1][i], data.dayDistribution[2][i] / data.dayDistribution[1][i])
+                    dayDistributionTable.current.add(
+                        DAYS[i], 
+                        data.dayDistribution[0][i], 
+                        data.dayDistribution[1][i], 
+                        data.dayDistribution[2][i] / data.dayDistribution[1][i],
+                        data.dayDistribution[3][i]
+                    )
                 }
             }
 
             for (var i = 0; i < data.hourDistribution[0].length; i++) {
-                hourDistributionTable.current.add(data.hourDistribution[0][i], data.hourDistribution[1][i], data.hourDistribution[2][i], data.hourDistribution[3][i] / data.hourDistribution[2][i])
+                hourDistributionTable.current.add(
+                    data.hourDistribution[0][i], 
+                    data.hourDistribution[1][i], 
+                    data.hourDistribution[2][i], 
+                    data.hourDistribution[3][i] / data.hourDistribution[2][i],
+                    data.hourDistribution[4][i], 
+                )
             }
 
 
             for (var i = 0; i < SETUPS.length; i++) {
                 if (data.setupDistribution[1][i] > 0) {
-                    setupDistributionTable.current.add(SETUPS[i], data.setupDistribution[0][i], data.setupDistribution[1][i], data.setupDistribution[2][i] / data.setupDistribution[1][i])
+                    setupDistributionTable.current.add(
+                        SETUPS[i], 
+                        data.setupDistribution[0][i], 
+                        data.setupDistribution[1][i], 
+                        data.setupDistribution[2][i] / data.setupDistribution[1][i],
+                        data.setupDistribution[4][i]
+                        
+                    )
                 }
             }
 
 
             for (var i = 0; i < DURATIONS.length; i++) {
                 if (data.durationDistribution[1][i] > 0) {
-                    durationDistributionTable.current.add(DURATIONS[i], data.durationDistribution[0][i], data.durationDistribution[1][i], data.durationDistribution[2][i]/ data.durationDistribution[1][i])
+                    durationDistributionTable.current.add(
+                        DURATIONS[i], 
+                        data.durationDistribution[0][i], 
+                        data.durationDistribution[1][i], 
+                        data.durationDistribution[2][i]/ data.durationDistribution[1][i],
+                        data.durationDistribution[3][i] 
+                    )
                 }
             }
 
             for (var i = 0; i < data.costDistribution[0].length; i++) {
                 if (data.costDistribution[2][i] > 0) {
-                    costDistributionTable.current.add(data.costDistribution[0][i], data.costDistribution[1][i], data.costDistribution[2][i], data.costDistribution[3][i] / data.costDistribution[2][i])
+                    costDistributionTable.current.add(
+                        data.costDistribution[0][i], 
+                        data.costDistribution[1][i], 
+                        data.costDistribution[2][i], 
+                        data.costDistribution[3][i] / data.costDistribution[2][i],
+                        data.costDistribution[4][i])
                 }
             }
 
             for (var i = 0; i < data.priceDistribution[0].length; i++) {
                 if (data.priceDistribution[2][i] > 0) {
-                    priceDistributionTable.current.add(data.priceDistribution[0][i], data.priceDistribution[1][i], data.priceDistribution[2][i], data.priceDistribution[3][i] / data.priceDistribution[2][i])
+                    priceDistributionTable.current.add(
+                        data.priceDistribution[0][i], 
+                        data.priceDistribution[1][i], 
+                        data.priceDistribution[2][i], 
+                        data.priceDistribution[3][i] / data.priceDistribution[2][i],
+                        data.priceDistribution[4][i])
                 }
             }
 
             for (var i = 0; i < data.symbolDistribution[0].length; i++) {
                 if (data.symbolDistribution[2][i] > 0) {
-                    symbolDistributionTable.current.add(data.symbolDistribution[0][i], data.symbolDistribution[1][i], data.symbolDistribution[2][i], data.symbolDistribution[3][i] / data.symbolDistribution[2][i])
+                    symbolDistributionTable.current.add(
+                        data.symbolDistribution[0][i], 
+                        data.symbolDistribution[1][i], 
+                        data.symbolDistribution[2][i], 
+                        data.symbolDistribution[3][i] / data.symbolDistribution[2][i],
+                        data.symbolDistribution[4][i])
                 }
             }
-            setDayDistribution(data.dayDistribution)
-            setHourDistribution(data.hourDistribution)
-            setSetupDistribution(data.setupDistribution)
-            setDurationDistribution(data.durationDistribution)
-            setCostDistribution(data.costDistribution)
-            setPriceDistribution(data.priceDistribution)
-            setSymbolDistribution(data.symbolDistribution)
+
             setDataLoading(false)
         }).catch(err => {
             console.log(err)
@@ -249,7 +249,6 @@ export default function DetailedJournal() {
     useEffect(() => {
         if (isSigned && !isFirstSigned) {
             setDataLoading(true)
-            showTradeTable()
             showData()
         }
     }, [filters, isSigned, isFirstSigned])
@@ -279,7 +278,7 @@ export default function DetailedJournal() {
             <div className='lg:flex mt-5 lg:mt-0 h-full'>
                 <div className='w-full lg:w-3/5 h-full overflow-auto'>
                     <TabBar className='flex mb-2 mx-2 space-x-2' view={tabView} adapter={iconTabAdapter} defaultTab='overview'>
-                        <Tab className='bg-secondary-800 material' id='overview' label='Overview' icon={faChartPie}/>
+                        <Tab className='bg-secondary-800 material' id='overview' label='Overview' icon={faChartPie} />
                         <Tab className='bg-secondary-800 material' id='options' label='Options' icon={faList} />
                         <Tab className='bg-secondary-800 material' id='trade-distribution' label='Trade distribution' icon={faMoneyBillTransfer} />
                         <Tab className='bg-secondary-800 material' id='risk' label='Risk' icon={fa1} />
@@ -288,23 +287,26 @@ export default function DetailedJournal() {
                         <Tab id='overview'>
                             <div className='flex flex-wrap'>
                                 <ValueCard className='w-full md:w-1/3' icon={faSackDollar}
-                                    label='Highest profitable trade' value={<div className='text-green-500'>${round(highestPnl.netPnl, 2)}</div>} trade={highestPnl.symbol} date={highestPnl.entryDate}/>
+                                    label='Highest profitable trade' value={<div className='text-green-500'>${round(data.highestPnlTrade.netPnl, 2)}</div>} trade={data.highestPnlTrade.symbol} date={data.highestPnlTrade.entryDate} />
                                 <ValueCard className='w-full md:w-1/3' icon={faSackXmark}
-                                    label='Highest profitable trade' value={<div className='text-red-500'>${round(Math.abs(lowestPnl.netPnl), 2)}</div>} trade={lowestPnl.symbol} date={lowestPnl.entryDate}/>
-                                {/* <ValueCard className='w-full md:w-1/4' icon={faCoins}
-                                    label='Gross P&L' value={<div className='text-green-500'>$6013.50</div>} trade='TATAMOTOR' date='03 Aug 2022'/> */}
-                                <RateCard className='w-full md:w-1/3' icon={faPercentage}
-                                    label='win ratio' value={round(100 * winners / totalTrades, 2)} positiveValue={100 * winners / totalTrades} negativeValue={100 * losers / totalTrades} />
+                                    label='Highest profitable trade' value={<div className='text-red-500'>${round(Math.abs(data.lowestPnlTrade.netPnl), 2)}</div>} trade={data.lowestPnlTrade.symbol} date={data.lowestPnlTrade.entryDate} />
+                                <RateCard 
+                                    className='w-full md:w-1/3' 
+                                    icon={faPercentage}
+                                    label='win ratio' 
+                                    value={round(100 * data.counts[1] / data.counts[0], 2)} 
+                                    positiveValue={100 * data.counts[1] / data.counts[0]} 
+                                    negativeValue={100 * data.counts[2] / data.counts[0]} />
 
                             </div>
-                            {data.map((item, i) =><div key={i}>
+                            {overViewData.map((item, i) => <div key={i}>
                                 <div className='text-lg font-bold px-2 pt-3 pb-1'>{item[0]}</div>
                                 <div className='md:grid grid-cols-3'>
-                                    {item[1].map(([label, format, data], j) => 
+                                    {item[1].map(([label, format, value], j) =>
                                         <Card key={j}>
                                             <div className='flex justify-between font-bold text-xs'>
                                                 <div>{label}</div>
-                                                {format(data)}
+                                                {format(value)}
                                             </div>
                                         </Card>
                                     )}
@@ -313,7 +315,7 @@ export default function DetailedJournal() {
                         </Tab>
                         <Tab id='options'>
                             <TabBar className='flex' view={tabView2} adapter={simpleTabAdapter} defaultTab='type'>
-                                <Tab id='type' label='Type'/>
+                                <Tab id='type' label='Type' />
                                 <Tab id='date' label='Date to expiry' />
                             </TabBar>
                             <TabView ref={tabView2}>
@@ -338,10 +340,7 @@ export default function DetailedJournal() {
                                     <Card>
                                         <div className='overflow-x-auto'>
                                             <Table ref={optionsTable} headers={['Type', 'Net P&L', 'No of trades', 'Cost', 'Winrate']}
-                                                adapter={detailedJournelOptionsTableAdapter} data={[
-                                                    ['In the money', 1058.6, 12, 50],
-                                                    ['Out the money', 1058.6, 25, 50],
-                                                ]} />
+                                                adapter={detailedJournelOptionsTableAdapter} />
                                         </div>
                                     </Card>
                                 </Tab>
@@ -351,7 +350,8 @@ export default function DetailedJournal() {
                                             <div className='text-lg font-bold'>Trade distribution by date</div>
                                             <div className='h-80'>
 
-                                                <Bar options={barGraphOptions} data={dateToExpiryDistribution} />
+                                                <Bar options={barGraphOptions} 
+                                                    data={barGraphData(data.dataByExpiryDate[0], data.dataByExpiryDate[2], primaryColor)} />
                                             </div>
                                         </Card>
                                         <Card className='w-full md:w-1/2'>
@@ -359,14 +359,15 @@ export default function DetailedJournal() {
 
                                             <div className='h-80'>
 
-                                                <Bar options={barGraphOptions} data={dateToExpiryPerformance} />
+                                                <Bar options={barGraphOptions} 
+                                                    data={barGraphData(data.dataByExpiryDate[0], data.dataByExpiryDate[1])} />
                                             </div>
                                         </Card>
                                     </div>
                                     <Card>
                                         <div className='overflow-x-auto'>
-                                            <Table ref={dateToExpiryTable} headers={['Type', 'Net P&L', 'No of trades', 'Cost', 'Winrate']}
-                                                adapter={detailedJournelOptionsTableAdapter}/>
+                                            <Table ref={dataByExpiryDateTable} headers={['Type', 'Net P&L', 'No of trades', 'Cost', 'Winrate']}
+                                                adapter={detailedJournelOptionsTableAdapter} />
                                         </div>
                                     </Card>
                                 </Tab>
@@ -374,13 +375,13 @@ export default function DetailedJournal() {
                         </Tab>
                         <Tab id='trade-distribution'>
                             <TabBar className='flex' view={tabView3} adapter={simpleTabAdapter} defaultTab='day'>
-                                <Tab id='day' label='Day'/>
-                                <Tab id='hour' label='Hour'/>
-                                <Tab id='setup' label='Setup'/>
-                                <Tab id='duration' label='Duration'/>
-                                <Tab id='cost' label='Cost'/>
-                                <Tab id='price' label='Price'/>
-                                <Tab id='symbol' label='Symbol'/>
+                                <Tab id='day' label='Day' />
+                                <Tab id='hour' label='Hour' />
+                                <Tab id='setup' label='Setup' />
+                                <Tab id='duration' label='Duration' />
+                                <Tab id='cost' label='Cost' />
+                                <Tab id='price' label='Price' />
+                                <Tab id='symbol' label='Symbol' />
                                 <Tab id='tags' label='Tags' />
                                 <Tab id='mistake' label='Mistake' />
                             </TabBar>
@@ -390,7 +391,8 @@ export default function DetailedJournal() {
                                         <Card className='w-full md:w-1/2'>
                                             <div className='text-lg font-bold'>Trade distribution by Day</div>
                                             <div className='h-80'>
-                                                <Bar options={barGraphOptions} data={barGraphData(DAYS,  dayDistribution[1], primaryColor)} />
+                                                <Bar options={barGraphOptions} 
+                                                data={barGraphData(DAYS, data.dayDistribution[1], primaryColor)} />
                                             </div>
                                         </Card>
                                         <Card className='w-full md:w-1/2'>
@@ -398,14 +400,14 @@ export default function DetailedJournal() {
 
                                             <div className='h-80'>
 
-                                                <Bar options={barGraphOptions} data={barGraphData(DAYS, dayDistribution[0])} />
+                                                <Bar options={barGraphOptions} data={barGraphData(DAYS, data.dayDistribution[0])} />
                                             </div>
                                         </Card>
                                     </div>
                                     <Card>
                                         <div className='overflow-x-auto'>
                                             <Table ref={dayDistributionTable} headers={['Type', 'Net P&L', 'No of trades', 'Cost', 'Winrate']}
-                                                adapter={detailedJournelOptionsTableAdapter}/>
+                                                adapter={detailedJournelOptionsTableAdapter} />
                                         </div>
                                     </Card>
                                 </Tab>
@@ -414,7 +416,7 @@ export default function DetailedJournal() {
                                         <Card className='w-full md:w-1/2'>
                                             <div className='text-lg font-bold'>Trade distribution by hour</div>
                                             <div className='h-80'>
-                                                <Bar options={barGraphOptions} data={barGraphData(hourDistribution[0], hourDistribution[2], primaryColor)} />
+                                                <Bar options={barGraphOptions} data={barGraphData(data.hourDistribution[0], data.hourDistribution[2], primaryColor)} />
                                             </div>
                                         </Card>
                                         <Card className='w-full md:w-1/2'>
@@ -422,7 +424,7 @@ export default function DetailedJournal() {
 
                                             <div className='h-80'>
 
-                                                <Bar options={barGraphOptions} data={barGraphData(hourDistribution[0], hourDistribution[1])} />
+                                                <Bar options={barGraphOptions} data={barGraphData(data.hourDistribution[0], data.hourDistribution[1])} />
                                             </div>
                                         </Card>
                                     </div>
@@ -438,7 +440,7 @@ export default function DetailedJournal() {
                                         <Card className='w-full md:w-1/2'>
                                             <div className='text-lg font-bold'>Trade distribution by setup</div>
                                             <div className='h-80'>
-                                                <Bar options={barGraphOptions} data={barGraphData(SETUPS, setupDistribution[1], primaryColor)} />
+                                                <Bar options={barGraphOptions} data={barGraphData(data.setupDistribution[0], data.setupDistribution[2], primaryColor)} />
                                             </div>
                                         </Card>
                                         <Card className='w-full md:w-1/2'>
@@ -446,7 +448,7 @@ export default function DetailedJournal() {
 
                                             <div className='h-80'>
 
-                                                <Bar options={barGraphOptions} data={barGraphData(SETUPS, setupDistribution[0])} />
+                                                <Bar options={barGraphOptions} data={barGraphData(data.setupDistribution[0], data.setupDistribution[1])} />
                                             </div>
                                         </Card>
                                     </div>
@@ -462,7 +464,7 @@ export default function DetailedJournal() {
                                         <Card className='w-full md:w-1/2'>
                                             <div className='text-lg font-bold'>Trade distribution by duration</div>
                                             <div className='h-80'>
-                                                <Bar options={barGraphOptions} data={barGraphData(DURATIONS, durationDistribution[1], primaryColor)} />
+                                                <Bar options={barGraphOptions} data={barGraphData(DURATIONS, data.durationDistribution[1], primaryColor)} />
                                             </div>
                                         </Card>
                                         <Card className='w-full md:w-1/2'>
@@ -470,7 +472,7 @@ export default function DetailedJournal() {
 
                                             <div className='h-80'>
 
-                                                <Bar options={barGraphOptions} data={barGraphData(DURATIONS, durationDistribution[0])} />
+                                                <Bar options={barGraphOptions} data={barGraphData(DURATIONS, data.durationDistribution[0])} />
                                             </div>
                                         </Card>
                                     </div>
@@ -486,7 +488,7 @@ export default function DetailedJournal() {
                                         <Card className='w-full md:w-1/2'>
                                             <div className='text-lg font-bold'>Trade distribution by cost</div>
                                             <div className='h-80'>
-                                                <Bar options={barGraphOptions} data={barGraphData(costDistribution[0], costDistribution[2], primaryColor)} />
+                                                <Bar options={barGraphOptions} data={barGraphData(data.costDistribution[0], data.costDistribution[2], primaryColor)} />
                                             </div>
                                         </Card>
                                         <Card className='w-full md:w-1/2'>
@@ -494,7 +496,7 @@ export default function DetailedJournal() {
 
                                             <div className='h-80'>
 
-                                                <Bar options={barGraphOptions} data={barGraphData(costDistribution[0], costDistribution[1])} />
+                                                <Bar options={barGraphOptions} data={barGraphData(data.costDistribution[0], data.costDistribution[1])} />
                                             </div>
                                         </Card>
                                     </div>
@@ -510,7 +512,7 @@ export default function DetailedJournal() {
                                         <Card className='w-full md:w-1/2'>
                                             <div className='text-lg font-bold'>Trade distribution by price</div>
                                             <div className='h-80'>
-                                                <Bar options={barGraphOptions} data={barGraphData(priceDistribution[0], priceDistribution[2], primaryColor)} />
+                                                <Bar options={barGraphOptions} data={barGraphData(data.priceDistribution[0], data.priceDistribution[2], primaryColor)} />
                                             </div>
                                         </Card>
                                         <Card className='w-full md:w-1/2'>
@@ -518,7 +520,7 @@ export default function DetailedJournal() {
 
                                             <div className='h-80'>
 
-                                                <Bar options={barGraphOptions} data={barGraphData(priceDistribution[0], priceDistribution[1])} />
+                                                <Bar options={barGraphOptions} data={barGraphData(data.priceDistribution[0], data.priceDistribution[1])} />
                                             </div>
                                         </Card>
                                     </div>
@@ -534,7 +536,7 @@ export default function DetailedJournal() {
                                         <Card className='w-full md:w-1/2'>
                                             <div className='text-lg font-bold'>Trade distribution by symbol</div>
                                             <div className='h-80'>
-                                                <Bar options={barGraphOptions} data={barGraphData(symbolDistribution[0], symbolDistribution[2], primaryColor)} />
+                                                <Bar options={barGraphOptions} data={barGraphData(data.symbolDistribution[0], data.symbolDistribution[2], primaryColor)} />
                                             </div>
                                         </Card>
                                         <Card className='w-full md:w-1/2'>
@@ -542,7 +544,7 @@ export default function DetailedJournal() {
 
                                             <div className='h-80'>
 
-                                                <Bar options={barGraphOptions} data={barGraphData(symbolDistribution[0], symbolDistribution[1])} />
+                                                <Bar options={barGraphOptions} data={barGraphData(data.symbolDistribution[0], data.symbolDistribution[1])} />
                                             </div>
                                         </Card>
                                     </div>
@@ -558,24 +560,11 @@ export default function DetailedJournal() {
                         <Tab id='risk'></Tab>
                     </TabView>
                 </div>
-                <Card className='w-full lg:w-2/5 h-full' innerClassName='flex flex-col'>
-                    <div className='overflow-auto grow'>
-                        <Table
-                            ref={tradeTable}
-                            headers={['Status', 'Data', 'Symbol', 'Net P&L', 'ROI', 'Side']}
-                            adapter={detailedJournelTableAdapter}
-                            onClick={(items) => { navigate('/trade-analytics/' + items[items.length - 1]) }} />
-                    </div>
-                    <div className='mt-2'>
-                        <Pagination className='w-fit mx-auto' limit={limit} onChange={showTradeTable} loading={tradesLoading} />
-                    </div>
-                    {/* <div className='overflow-auto grow '>
-                        <Table ref={tradeTable} headers={['Status','Data','Symbol','Net P&L','ROI','Side']} adapter={detailedJournelTableAdapter}
-                            onChange={(data) => setTableNumber(data.length)}
-                            />
-                    </div>
-                    <div className='mt-2 text-xs text-center text-secondary-500'>Showing {tableNumber} trades{tableNumber>1?'s':''}. <a className='text-indigo-500' href="/trades">View all</a></div> */}
-                </Card>
+                <TradesTable 
+                    className ='w-full lg:w-2/5 h-full '
+                    headers={['Si/No', 'Status', 'Data', 'Symbol', 'Net P&L', 'ROI', 'Side']}
+                    adapter={detailedJournelTableAdapter}
+                    total={data.counts[0]} />
             </div>
         </div>
     </>)

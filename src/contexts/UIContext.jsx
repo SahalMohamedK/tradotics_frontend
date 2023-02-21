@@ -22,9 +22,9 @@ export default function UIProvider({children}) {
     let confirmDialog = useRef()
     let toastRef = useRef()
 
-    function showConfirmDialog(title, sub, positiveLabel, positiveFunc){
+    function showConfirmDialog(title, icon, sub, positiveLabel, positiveFunc){
         setConfirmData({ sub: sub, positiveLabel: positiveLabel, positiveFunc: positiveFunc })
-        confirmDialog.current.show(title, faTrash)
+        confirmDialog.current.show(title, icon)
     }
 
     const value = {

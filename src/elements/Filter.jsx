@@ -170,9 +170,9 @@ export function Filter({className, label, onFilterSet}) {
                       onChange={setCategoryQuery}/>
                     <div className='md:h-[40vh] overflow-y-auto mt-2'>
                       <TabBar view={tabView} adapter={filterTabAdapter} defaultTab={0}>
-                        {objectMap(filters, ([label], i)=>
+                        {objectMap(filters, ([label, options], i)=>
                           {
-                            if (label.toLowerCase().replace(/\s+/g, '').includes(categoryQuery.toLowerCase().replace(/\s+/g, ''))) {
+                            if (!isEmpty(options) && label.toLowerCase().replace(/\s+/g, '').includes(categoryQuery.toLowerCase().replace(/\s+/g, ''))){
                               return <Tab key={i} id={i} label={label} number={selection[i] && selection[i].size}/>
                             }
 

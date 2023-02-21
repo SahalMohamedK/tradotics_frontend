@@ -1,3 +1,6 @@
+import { faTrash } from '@fortawesome/free-solid-svg-icons'
+import axios from 'axios'
+import { API_URL } from "./config"
 
 export function classNames(...classes) {
     return classes.filter(Boolean).join(' ')
@@ -154,6 +157,64 @@ export function safeNumber(n, otherwise=0){
     return n
 }
 
+export function mergeGraphDatas(data1, data2){
+    let labels = [...data1[0]]
+    let values1 = []
+    let values2 = []
+    data2[0].map(label => {
+        if (!labels.includes(label)) {
+            labels.push(label)
+        }
+    })
+
+    labels.map(label => {
+        if(data1[0].includes(label)){
+            values1.push(data1[1][data1[0].indexOf(label)])
+        }else {
+            values1.push(0)
+        }
+        if (data2[0].includes(label)) {
+            values2.push(data2[1][data2[0].indexOf(label)])
+        }else {
+            values2.push(0)
+        }   
+    })
+    return [labels, values1, values2]
+}
+
+export function mergeCumulativeDatas(data1, data2){
+    let labels = [...data1[0]]
+    let values1 = []
+    let values2 = []
+    data2[0].map(label => {
+        if (!labels.includes(label)) {
+            labels.push(label)
+        }
+    })
+
+    labels.map(label => {
+        if (data1[0].includes(label)) {
+            values1.push(data1[1][data1[0].indexOf(label)])
+        } else {
+            if(isEmpty(values1)){
+                values1.push(0)
+            }else{
+                values1.push(values1[values1.length-1])
+            }
+        }
+        if (data2[0].includes(label)) {
+            values2.push(data2[1][data2[0].indexOf(label)])
+        } else {
+            if (isEmpty(values2)) {
+                values2.push(0)
+            } else {
+                values2.push(values2[values2.length - 1])
+            }
+        }
+    })
+    return [labels, values1, values2]
+}
+
 export class Form {
     constructor() {
         this.fields = {}
@@ -211,7 +272,6 @@ export class Form {
     }
 
     error(err) {
-        console.log(err);
         for (var key in err) {
             let field = this.fields[key]
             if (field) {
@@ -237,5 +297,80 @@ export class Form {
 
     sub(key, form){
         this.fields[key] = form
+    }
+}
+
+export class Curd {
+    constructor(url, name = '', toast = {}, dialog = {}) {
+        this.url = API_URL + url
+        this.name = name
+        this.toast = toast
+        this.dialog = dialog
+    }
+
+    getHeaders(headers = {}){
+        return {
+            headers: {
+                Authorization: `Token ${localStorage.getItem('auth_token')}`,
+                    'content-type': 'application/json',
+                ...headers
+            }
+        }
+    }
+
+    create(data, headers = {}) {
+        return new Promise((resolver, reject) => {
+            axios.post(this.url, data, this.getHeaders( headers)).then(response => {
+                this.toast.success('Created successfully', `${this.name} created successfully`)
+                resolver(response)
+            }).catch(err => {
+                this.toast.error('Creation failed', `${this.name} creation failed`)
+                reject(err)
+            })
+        })
+    }
+
+    update(data, headers = {}) {
+        return new Promise((resolver, reject) => {
+            axios.put(this.url, data, this.getHeaders(headers)).then(response => {
+                this.toast.success('Updated successfully', `${this.name} updated successfully`)
+                resolver(response)
+            }).catch(err => {
+                this.toast.error('Updation failed', `${this.name} updation failed`)
+                reject(err)
+            })
+        })
+    }
+
+    read(url = '', headers = {}) {
+        return new Promise((resolver, reject) => {
+            axios.get(this.url + url, this.getHeaders(headers)).then(response => {
+                // this.toast.success('Read successfully', `${this.name} read successfully`)
+                resolver(response)
+            }).catch(err => {
+                // this.toast.error('Read failed', `${this.name} read failed`)
+                reject(err)
+            })
+        })
+    }
+
+    delete(data) {
+        return new Promise((resolver, reject) => {
+            this.dialog.confirm(`Delete ${this.name}?`, faTrash, `Do you want to delete the ${this.name}`, 'Delete', () => { 
+                axios.delete(this.url, {
+                    headers: {
+                        Authorization: `Token ${localStorage.getItem('auth_token')}`,
+                        'content-type': 'application/json',
+                    },
+                    data
+                }).then(response => {
+                    this.toast.success('Deleted successfully', `${this.name} deleted successfully`)
+                    resolver(response)
+                }).catch(err => {
+                    this.toast.error('Deletion failed', `${this.name} deletion failed`)
+                    reject(err)
+                })
+            })
+        })
     }
 }

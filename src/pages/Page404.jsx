@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom'
 import { useUI } from '../contexts/UIContext'
 
 export default function Page404() {
-    let { setIsLoading } = useUI()
+    let { setLoading } = useUI()
 
     useEffect(() => {
-        setIsLoading(false)
+        setLoading(false)
     })
   return (
     <div className='h-screen relative'>

@@ -55,7 +55,8 @@ function App() {
                 <Route path='/dashboard' element={<Wrapper><Dashboard /></Wrapper>} />
                 <Route path='/settings' element={<Wrapper filter={false}><Settings /></Wrapper>} />
                 <Route path='/add-trades' element={<Wrapper filter={false}><AddTrades /></Wrapper>} />
-                <Route path='/stopless-and-target' element={<Wrapper><SLnTG /></Wrapper>} />
+                <Route path='/stopless-and-target' element={<UnderConstruction/>} />
+                {/* <Route path='/stopless-and-target' element={<Wrapper><SLnTG /></Wrapper>} /> */}
                 
                 <Route path='/detailed-report' element={<Wrapper><DetailedReport/></Wrapper>} />
                 <Route path='/day-views' element={<Wrapper><DayViews/></Wrapper>} />
@@ -67,7 +68,7 @@ function App() {
                 <Route path='/institute-admin' element={<Wrapper><InstituteAdmin/></Wrapper>} /> 
                 <Route path='/institute-page1' element={<Wrapper><InstitutePage1/></Wrapper>} /> 
                 <Route path='/institute-dashboard' element={<Wrapper><InstituteDashboard/></Wrapper>} /> 
-                <Route path='/trade-analytics/:id' element={<Wrapper><TradeAnalytics /></Wrapper>} />
+                <Route path='/trade-analytics/:id' element={<Wrapper filter={false}><TradeAnalytics /></Wrapper>} />
                 <Route path='/chart-views' element={<UnderConstruction/>} />
                 {/* <Route path='/chart-views' element={<Wrapper><ChartViews /></Wrapper>} /> */}
                 <Route path='/signin' element={<Signin />} />

@@ -44,19 +44,33 @@ export default function Signin() {
         }
     }
 
+    // useEffect(() => {
+    //     setLoading(true)
+    //     if (isSigned) {
+    //         if (isFirstSigned) {
+    //             navigate('/settings')
+    //             toast.info('Setup your profile', 'First you need to setup user user profile details.')
+    //         } else {
+    //             toast.success('Welcome back!', 'You have successfully logged into Tradotics.')
+    //             navigate('/dashboard');
+    //         }
+    //     } else if (isSigned === false) {
+    //         setLoading(false)
+    //     }
+    // }, [isSigned])
+
     useEffect(() => {
-        if (isSigned) {
-            if (isFirstSigned) {
-                navigate('/settings')
-                toast.info('Setup your profile', 'First you need to setup user user profile details.')
-            } else {
-                toast.success('Welcome back!', 'You have successfully logged into Tradotics.')
-                navigate('/dashboard');
-            }
-        } else if (isSigned === false) {
+        setLoading(true)
+        if (isSigned && isFirstSigned) {
+            navigate('/settings')
+            toast.info('Setup your profile', 'First you need to setup user user profile details.')
+        } else if (isSigned && isFirstSigned === false){
+            toast.success('Welcome back!', 'You have successfully logged into Tradotics.')
+            navigate('/dashboard');
+        }else if (isSigned === false) {
             setLoading(false)
         }
-    }, [isSigned])
+    }, [isSigned, isFirstSigned])
 
     return (
         <div className='h-screen flex flex-col'>

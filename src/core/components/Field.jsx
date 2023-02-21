@@ -28,7 +28,7 @@ export class Field extends Component {
     }
 
     componentDidUpdate(prevProps) {
-        if (this.props.value !== undefined && prevProps.value !== this.props.value && (!isNaN(prevProps.value) && !isNaN(prevProps.value))) {
+        if (this.props.value !== undefined && prevProps.value !== this.props.value) {
             this.setState({value: this.props.value})
         }
     }
