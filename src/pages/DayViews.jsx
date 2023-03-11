@@ -71,24 +71,24 @@ export default function Journal() {
     }, [isSigned, isFirstSigned])
 
     return (<>
-        {dataLoading &&
-            <div className='h-full pt-16 relative'>
-                <div className='center'>
-                    <Spinner className='w-10 h-10 mx-auto' />
-                    <div>Loading data...</div>
+        <div className='p-3 h-screen overflow-y-auto mb-16 md:mb-0'>
+            {dataLoading &&
+                <div className='h-full pt-16 relative'>
+                    <div className='center'>
+                        <Spinner className='w-10 h-10 mx-auto' />
+                        <div>Loading data...</div>
+                    </div>
                 </div>
-            </div>
-        }
-        {isEmpty(data.dataByDates) && !dataLoading &&
-            <div className='h-full pt-16 relative w-full'>
-                <div className='center text-red-500'>
-                    <Icon className='mx-auto' icon={faTriangleExclamation} />
-                    <div className='text-sm whitespace-nowrap'>No data is available</div>
+            }
+            {isEmpty(data.dataByDates) && !dataLoading &&
+                <div className='h-full pt-16 relative w-full'>
+                    <div className='center text-red-500'>
+                        <Icon className='mx-auto' icon={faTriangleExclamation} />
+                        <div className='text-sm whitespace-nowrap'>No data is available</div>
+                    </div>
                 </div>
-            </div>
-        }
-        {!isEmpty(data.dataByDates) && 
-            <div className='md:flex flex-wrap mt-16'>
+            }
+            <div className={classNames('mt-16', dataLoading ? 'hidden' : '')}>
                 <Dialog className='w-full h-full md:w-auto md:h-auto' ref={fullDialog} title={
                     <div className='flex items-center'>
                         <div className='md:text-lg font-bold'>Wed, Aug 11 2022</div>
@@ -161,6 +161,6 @@ export default function Journal() {
                     limit={data.total}
                     onChange={showData}/>
             </div>
-        }
+        </div>
     </>)
 }

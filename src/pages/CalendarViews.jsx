@@ -137,8 +137,8 @@ export default function CalendarViews() {
     }
   }, [isSigned, isFirstSigned])
 
-  return (
-    <>
+  return (<>
+    <div className='p-3 h-screen overflow-y-auto mb-16 md:mb-0'>
       { dataLoading &&
           <div className='h-full pt-16 relative'>
               <div className='center'>
@@ -147,20 +147,20 @@ export default function CalendarViews() {
               </div>
           </div>
       }
-    <div className='mt-16'>
-        <Card>
-            <div className='w-fit mx-auto flex items-center space-x-5'>
-              <IconBtn icon={faCircleArrowLeft} onClick={() => setYear(year-1)}/>
-              <div>{year}</div>
-              <IconBtn icon={faCircleArrowRight} onClick={() => setYear(year + 1)} />
-            </div>
-        </Card>
-        <div className='grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4'>
-          {MONTHS.map((_, month) => 
-            <SmallCalendar key={month} year={year} month={month} markers={markers}/>
-          )}
-        </div>
+      <div className={classNames('mt-16', dataLoading ? 'hidden' : '')}>
+          <Card>
+              <div className='w-fit mx-auto flex items-center space-x-5'>
+                <IconBtn icon={faCircleArrowLeft} onClick={() => setYear(year-1)}/>
+                <div>{year}</div>
+                <IconBtn icon={faCircleArrowRight} onClick={() => setYear(year + 1)} />
+              </div>
+          </Card>
+          <div className='grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4'>
+            {MONTHS.map((_, month) => 
+              <SmallCalendar key={month} year={year} month={month} markers={markers}/>
+            )}
+          </div>
+      </div>
     </div>
-    </>
-  )
+  </>)
 }

@@ -1,4 +1,4 @@
-import { faCirclePlus, faEdit, faPlay } from '@fortawesome/free-solid-svg-icons'
+import { faArrowRightArrowLeft, faCalendar, faCirclePlus, faClock, faDollar, faEdit, faLayerGroup, faPlay } from '@fortawesome/free-solid-svg-icons'
 import React, { useEffect, useRef, useState } from 'react'
 import Card from '../components/Card'
 import Dialog from '../components/Dialog'
@@ -10,6 +10,7 @@ import Table from '../components/Table'
 import { API_URL } from '../config'
 import { useAPI } from '../contexts/APIContext'
 import { useUI } from '../contexts/UIContext'
+import { Form } from '../utils'
 import Pagination from './Pagination'
 
 export default function ExecutionsTable({ className, tradeId, total = 0, headers, adapter}) {
@@ -21,9 +22,12 @@ export default function ExecutionsTable({ className, tradeId, total = 0, headers
     let table = useRef()
     let orderEditDialog = useRef()
 
+    let form = new Form()
+
     function deleteOrder(){
 
     }
+
 
     function showEditOrderDialog(order){
         orderEditDialog.current.show()
@@ -31,11 +35,16 @@ export default function ExecutionsTable({ className, tradeId, total = 0, headers
     }
 
     function editOrder(){
-        post(API_URL + '/order/update', {order}, getAuth()).then(response => {
-            toast.success('Edit success', 'Execution is edited successfully')
-        }).catch(err => {
-            toast.error('Edit failed', 'Execution edit is failed')
-        })
+        if(form.isValid()){
+            let data = form.get(true)
+            console.log({ ...order, ...data });
+            post(API_URL + '/order/update', {order: {...order, ...data}}, getAuth()).then(response => {
+                toast.success('Edit success', 'Execution is edited successfully')
+                showOrders()
+            }).catch(err => {
+                toast.error('Edit failed', 'Execution edit is failed')
+            })
+        }
     }
 
     function showOrders(start = 0, size = 25) {
@@ -62,21 +71,53 @@ export default function ExecutionsTable({ className, tradeId, total = 0, headers
             showOrders()
         }
     }, [isSigned, isFirstSigned])
+
   return (<>
-        <Dialog className='w-1/2' ref={orderEditDialog} title='Execution edit' icon={faEdit}>
+        <Dialog 
+            className='w-1/2' 
+            ref={orderEditDialog} 
+            title='Execution edit' 
+            icon={faEdit}>
             <div className='flex space-x-2'>
-                <InputField className='w-1/3' type='date' label='Date' value={order.tradeDate}/>
-                <InputField className='w-1/3' type='time' label='Time' value={order.executionTime} />
-                <SelectField className='w-1/3' label='Side' values={['Buy', 'Sell']}/>
+                <InputField 
+                    ref={form.ref}
+                    className='w-1/3' 
+                    type='date' 
+                    icon={faCalendar}
+                    label='Date'
+                    name='tradeDate' 
+                    value={order.tradeDate}/>
+                <InputField 
+                    ref={form.ref}
+                    className='w-1/3' 
+                    icon={faClock}
+                    type='time' 
+                    label='Time'
+                    name='executionTime'
+                    value={order.executionTime} />
+                <SelectField 
+                    ref={form.ref}
+                    className='w-1/3' 
+                    label='Side' 
+                    name='tradeType'
+                    icon={faArrowRightArrowLeft}
+                    values={['Buy', 'Sell']}/>
             </div>       
             <div className='flex space-x-2 mt-2'>
-                <InputField className='w-1/3' type='number' label='Price' value={order.price}/>
-                <InputField className='w-1/3' type='number' label='Quantity' value={order.quantity}/>
-            </div> 
-            <div className='flex space-x-2 mt-2'>
-                <InputField className='w-1/3' type='number' label='Value'/>
-                <InputField className='w-1/3' type='number' label='P$L'/>
-            </div>   
+                <InputField 
+                    ref={form.ref}
+                    className='w-1/3' 
+                    icon={faDollar}
+                    type='number' 
+                    label='Price' 
+                    value={order.price}/>
+                <InputField 
+                    ref={form.ref}
+                    className='w-1/3' 
+                    type='number' 
+                    icon={faLayerGroup}
+                    label='Quantity' value={order.quantity}/>
+            </div>
             <div className='mt-5 flex'>
                 <div className='secondary-btn ml-auto' onClick={() => orderEditDialog.current.hide()}>Cancel</div>
               <div className='primary-btn ml-2' onClick={editOrder}>Save</div>

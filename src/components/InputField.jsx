@@ -1,29 +1,34 @@
-import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
-import React, { Fragment } from 'react'
-import Field from '../core/components/Field';
+import { faCalendar, faClock, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { classNames } from '../utils';
+import FieldWraper from './FieldWraper';
 import IconBtn from './IconBtn';
 
-class InputField extends Field {
+class InputField extends FieldWraper {
     init(){
         super.init()
         this.defaultValue = ''
         this.state = {
             type: this.props.type
         }
-
-        this.onKeyPress = this.onKeyPress.bind(this)
     }
 
-    onKeyPress(e) {
-        if (e.key == 'Enter' && this.props.onEnter) {
-            this.props.onEnter();
+    get(){
+        let value = this.state.value;
+        let errors = this.validate();
+        if (errors.length > 0) {
+            this.error(errors);
+        } else if(this.props.type == 'number'){
+            if(value == ''){
+                return null;
+            }
+            return Number(value)
+        } else {
+            return value
         }
     }
 
     field(){
-        return (
-            <Fragment>
+        return (<>
                 <input 
                     ref={this.input} 
                     type={this.state.type} 
@@ -56,8 +61,22 @@ class InputField extends Field {
                         size='sm' 
                         onClick={() => this.setState({ type: 'password' })} />
                 }
-            </Fragment>
-        )
+                {this.props.type == 'date' &&
+                    <IconBtn
+                        className='ml-1'
+                        icon={faCalendar}
+                        size='sm'
+                        onClick={() => this.input.current.showPicker()}/>
+                }
+
+                {this.props.type == 'time' &&
+                    <IconBtn
+                        className='ml-1'
+                        icon={faClock}
+                        size='sm'
+                        onClick={() => this.input.current.showPicker()} />
+                }
+        </>)    
     }
 }
 

@@ -1,15 +1,16 @@
 import React, {  Fragment, useEffect, useRef, useState } from 'react'
 import { useReducer } from 'react'
-import { classNames, isEmpty, len, objectMap } from '../utils'
+import { classNames, hasValue, isEmpty, len, objectMap, all } from '../utils'
 import { filterTabAdapter } from '../adapters/tabs'
 import { TabBar, TabView, Tab } from '../components/Tab'
 import { Disclosure, Popover, Transition } from '@headlessui/react'
-import { faAngleDown, faCalendar, faFilter, faFilterCircleXmark, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
+import { faAngleDown, faCalendar, faCross, faFilter, faFilterCircleXmark, faMagnifyingGlass, faX, faXmarkCircle } from '@fortawesome/free-solid-svg-icons'
 import Icon from '../components/Icon'
 import InputField from '../components/InputField'
 import Button from '../components/Button'
 import { useFilter } from '../contexts/FilterContext'
 import { useAPI } from '../contexts/APIContext'
+import IconBtn from '../components/IconBtn'
 
 export function Filter({className, label, onFilterSet}) {
   
@@ -18,6 +19,8 @@ export function Filter({className, label, onFilterSet}) {
   const [filters, _setFilters] = useState([])
   const [categoryQuery, setCategoryQuery] = useState('')
   const [filterQuery, setFilterQuery] = useState('')
+  const [fromDate, setFromDate] = useState()
+  const [toDate, setToDate] = useState()
 
   let buttonRef = useRef()
 
@@ -89,6 +92,12 @@ export function Filter({className, label, onFilterSet}) {
     for(var i in selection){
       converted[i] = Array.from(selection[i])
     }
+    if(toDate){
+      converted['toDate'] = toDate
+    }
+    if(fromDate){
+      converted['fromDate'] = fromDate
+    }
     if (onFilterSet){
       onFilterSet(converted)
     }else{
@@ -97,10 +106,44 @@ export function Filter({className, label, onFilterSet}) {
     buttonRef.current.click()
   }
 
+  function reset(){
+    setSelection({type: 'uaf'})
+    setToDate('')
+    setFromDate('')
+  }
+
   function getSelected(){
     let selected =[]
+    if(fromDate || toDate){
+      selected.push(
+        <div key={0}>
+          <Disclosure >
+            {({ open }) => (<>
+              <Disclosure.Button className='text-sm py-1 text-secondary-500 flex'>
+                <Icon className={classNames('ml-1 md:ml-0 duration-200', open ? 'rotate-180' : '')} icon={faAngleDown} size='sm' />
+                Date range
+              </Disclosure.Button>
+              <Disclosure.Panel>
+              {fromDate &&
+                  <div className='text-sm py-1 border-l border-secondary-600 text-secondary-500 ml-3'>
+                    <div>- From {fromDate}</div>
+                  </div>
+              }
+              {toDate &&
+                <div className='text-sm py-1 border-l border-secondary-600 text-secondary-500 ml-3'>
+                  <div>- To {toDate}</div>
+                </div>
+              }
+              </Disclosure.Panel>
+            </>)
+            }
+          </Disclosure>
+        </div>
+      )
+    }
     for(let i in selection){
       let category = []
+      
       selection[i].forEach((j) => {
         category.push(
           <div key={j} className='text-sm py-1 border-l border-secondary-600 text-secondary-500 ml-3'>
@@ -162,20 +205,29 @@ export function Filter({className, label, onFilterSet}) {
                       addons={[
                         <div className='flex text-xs text-secondary-600 p-1'>
                           <div className='ml-auto mr-2 whitespace-nowrap'>Select all</div>
-                          <input type='checkbox' className='!ring-offset-0 h-4 w-4 rounded bg-secondary-700 border-0 focus:outline-none' 
+                          <input 
+                            type='checkbox' 
+                            className='!ring-offset-0 h-4 w-4 rounded bg-secondary-700 border-0 focus:outline-none' 
                             onClick={(e) => setSelection({type: e.target.checked?'saf':'uaf'})}
-                          />
+                            checked={all(filters, (a, i) => len(a[1]) == len(hasValue(selection[i], [])))}/>
                         </div>
                       ]}
                       onChange={setCategoryQuery}/>
                     <div className='md:h-[40vh] overflow-y-auto mt-2'>
-                      <TabBar view={tabView} adapter={filterTabAdapter} defaultTab={0}>
+                      <TabBar 
+                        view={tabView} 
+                        adapter={filterTabAdapter} 
+                        defaultTab={0}>
                         {objectMap(filters, ([label, options], i)=>
                           {
                             if (!isEmpty(options) && label.toLowerCase().replace(/\s+/g, '').includes(categoryQuery.toLowerCase().replace(/\s+/g, ''))){
-                              return <Tab key={i} id={i} label={label} number={selection[i] && selection[i].size}/>
-                            }
-
+                              return (
+                                <Tab 
+                                  key={i} 
+                                  id={i} 
+                                  label={label} 
+                                  number={selection[i] && selection[i].size}/>
+                            )}
                           }
                         )}
                       </TabBar>
@@ -185,13 +237,18 @@ export function Filter({className, label, onFilterSet}) {
                     <TabView ref={tabView} onChange={() => setFilterQuery('')}>
                       {objectMap(filters, ([label, options], i) => 
                         <Tab key={i} id={i}>
-                          <InputField icon={faMagnifyingGlass} innerClassName='bg-secondary-900' label='Filter'
+                          <InputField 
+                            icon={faMagnifyingGlass} 
+                            innerClassName='bg-secondary-900' 
+                            label='Filter'
                             addons={[
                               <div className='flex text-xs text-secondary-600 py-1'>
                                 <div className='ml-auto mr-2 whitespace-nowrap'>Select all</div>
-                                <input type='checkbox' className='!ring-offset-0 h-4 w-4 rounded bg-secondary-700 border-0 focus:outline-none'
+                                <input 
+                                  type='checkbox' 
+                                  className='!ring-offset-0 h-4 w-4 rounded bg-secondary-700 border-0 focus:outline-none'
                                   onChange={(e) => setSelection({ type: (e.target.checked ? 'scf' : 'ucf'), i })}
-                                  checked={selection[i] && len(selection[i]) === len(filters[i][1])} />
+                                  checked={hasValue(selection[i] && len(selection[i]) === len(filters[i][1]), false)} />
                               </div>
                             ]}
                             onChange = {setFilterQuery}
@@ -199,14 +256,19 @@ export function Filter({className, label, onFilterSet}) {
                           <div className='md:h-[40vh] overflow-y-auto mt-2'>
                             {objectMap(options, (option, j) =>{
                               if (option.toLowerCase().replace(/\s+/g, '').includes(filterQuery.toLowerCase().replace(/\s+/g, ''))) {
-                                return <div key={j} className='flex items-center space-x-2 text-sm px-3 py-1 my-1 text-secondary-500 hover:text-white rounded duration-200 hover:bg-secondary-700 group'>
-                                  <input type='checkbox' className='!ring-offset-0 h-4 w-4 rounded bg-secondary-900 border-0 focus:outline-none'
+                                return (
+                                  <div 
+                                    key={j} 
+                                    className='flex items-center space-x-2 text-sm px-3 py-1 my-1 text-secondary-500 hover:text-white rounded duration-200 hover:bg-secondary-700 group'>
+                                  <input 
+                                    type='checkbox' 
+                                    className='!ring-offset-0 h-4 w-4 rounded bg-secondary-900 border-0 focus:outline-none'
                                     onChange={(e) => setSelection({ type: (e.target.checked ? 'sf' : 'uf'), i, j })}
-                                    checked={selection[i] && selection[i].has(j)}
+                                    checked={hasValue(selection[i] && selection[i].has(j), false)}
                                   />
                                   <div>{option}</div>
                                 </div>
-                              }
+                              )}
                             }
                             )}
                           </div>
@@ -218,7 +280,7 @@ export function Filter({className, label, onFilterSet}) {
                     <div className='text-sm mb-1'>Applied filters</div>
                     <div className='md:h-[40vh] overflow-y-auto relative'>
                       {getSelected()}
-                      {isEmpty(selection) && <>
+                      {isEmpty(selection) && !toDate && !fromDate && <>
                         <div className='hidden md:block center text-secondary-500 text-sm text-center border-dashed border p-5 lg:px-0 border-secondary-500'>
                             <Icon className='mb-2 mx-auto' icon={faFilterCircleXmark} />
                             No filters are applied
@@ -234,8 +296,37 @@ export function Filter({className, label, onFilterSet}) {
                   </div>
                 </div>
                 <div className='flex mt-auto items-end'>
-                  <InputField className='w-full md:w-auto md:ml-auto' type='date' label="From date" icon={faCalendar} innerClassName="bg-secondary-900 !p-0.5" />
-                  <InputField className='w-full md:w-auto ml-3' type='date' label="To date" icon={faCalendar}  innerClassName="bg-secondary-900 !p-0.5" />
+                  <InputField 
+                    className='w-full md:w-auto md:ml-auto' 
+                    type='date' 
+                    label="From date" 
+                    value={fromDate}
+                    icon={faCalendar} 
+                    onChange={setFromDate}
+                    innerClassName="bg-secondary-900 !py-0.5" 
+                    addons={[
+                      <IconBtn 
+                      className='ml-1'
+                      icon={faXmarkCircle}
+                      onClick={() => setFromDate('')}
+                      size='sm'/>
+                    ]}/>
+                  <InputField 
+                    className='w-full md:w-auto ml-3' 
+                    type='date' 
+                    label="To date" 
+                    value={toDate}
+                    icon={faCalendar}  
+                    onChange={setToDate}
+                    innerClassName="bg-secondary-900 !py-0.5" 
+                    addons={[
+                      <IconBtn 
+                      className='ml-1'
+                      icon={faXmarkCircle}
+                      onClick={() => setToDate('')}
+                      size='sm'/>
+                    ]}/>
+                  <Button className='ml-3 primary-btn h-fit' onClick={reset}>Reset</Button>
                   <Button className='ml-3 primary-btn h-fit' onClick={apply}>Apply</Button>
                 </div>
               </div>

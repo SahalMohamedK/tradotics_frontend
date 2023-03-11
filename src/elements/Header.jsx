@@ -6,9 +6,11 @@ import { HashLink} from 'react-router-hash-link';
 import { faAngleDown } from '@fortawesome/free-solid-svg-icons'
 import IconBtn from '../components/IconBtn'
 import { useState } from 'react'
+import { useAPI } from '../contexts/APIContext';
 
 export default function Header() {
     const [collapsed, setCollapsed] = useState(false)
+    let { isSigned } = useAPI()
 
     return (
         <header className={classNames(' overflow-y-hidden duration-200 backdrop-blur-lg border-b bg-primary-900/50 !border-white/10 text-white font-medium top-0 fixed w-full z-50 px-4 md:px-8 py-3',
@@ -16,6 +18,7 @@ export default function Header() {
             <div className='items-center md:flex'>
                 <div className='flex items-center'>
                     <Link to='/'><img src={logoImg} alt="" width='200'/></Link>
+                    <div className='mx-2 px-2 bg-indigo-500 rounded-full text-sm'>beta</div>
                     <IconBtn className='secondary-btn ml-auto block md:hidden' iconClassName={classNames('duration-200',collapsed?'rotate-180 ':'')}
                         icon={faAngleDown} onClick={() => setCollapsed(!collapsed)} box/>
                 </div>
@@ -25,9 +28,14 @@ export default function Header() {
                     <HashLink className='hover:text-indigo-500' to='/#pricing'>Pricing</HashLink>
                 </div>
                 <div className='flex md:ml-auto'>
-                    {/* <Link className='w-full secondary-btn mr-2' to='/signup'>Signup</Link> */}
-                    <Link className='w-full secondary-btn mr-2' to='/early-access'>Apply for early access</Link>
-                    <Link className='w-full primary-btn' to='/signin'>Signin</Link>
+                    <Link className='w-full secondary-btn mr-2' to='/signup'>Signup</Link>
+                    {/* <Link className='w-full secondary-btn mr-2' to='/early-access'>Apply for early access</Link> */}
+                    {isSigned === false && 
+                        <Link className='w-full primary-btn' to='/signin'>Signin</Link>
+                    }
+                    {isSigned &&
+                        <Link className='w-full primary-btn' to='/dashboard'>Dashboard</Link>
+                    }
                 </div>
             </div>
         </header>

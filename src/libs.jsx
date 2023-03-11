@@ -283,13 +283,13 @@ export const doughnutChartOptions = {
     }
 }
 
-export function doughnutChartData(labels, data, ){
+export function doughnutChartData(labels, data, positiveColor = greenColor, negativeColor = redColor){
     return {
         labels: labels,
         datasets: [{
             label: 'My First Dataset',
             data: data,
-            backgroundColor: [greenColor, redColor],
+            backgroundColor: [positiveColor, negativeColor],
             hoverOffset: 4
         }]
     }

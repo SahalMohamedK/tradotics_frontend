@@ -1,4 +1,4 @@
-import { faArrowTrendUp, faCircleChevronLeft, faCircleChevronRight, faEdit, faTrash, faCirclePlus, faUpRightAndDownLeftFromCenter, faNoteSticky, faPlay, faTag, faX, faWrench, faTriangleExclamation, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { faArrowTrendUp, faCircleChevronLeft, faCircleChevronRight, faEdit, faTrash, faCirclePlus, faUpRightAndDownLeftFromCenter, faNoteSticky, faPlay, faTag, faX, faWrench, faTriangleExclamation, faPlus, faReply } from '@fortawesome/free-solid-svg-icons'
 import React, { useRef, useState } from 'react'
 import { Line } from 'react-chartjs-2';
 import { areaGraphData, areaGraphOptions } from '../libs';
@@ -12,7 +12,6 @@ import Dialog from '../components/Dialog'
 import Icon from '../components/Icon'
 import Card from '../components/Card'
 import InputField from '../components/InputField';
-import SelectField from '../components/SelectField';
 import { useEffect } from 'react';
 import { useUI } from '../contexts/UIContext';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -22,10 +21,14 @@ import { classNames, round } from '../utils';
 import { noTradeError, noTradeHistoriesError } from '../libs/errors';
 import { FORMAT } from '../libs/consts'
 import ExecutionsTable from '../elements/ExecutionsTable';
+import ComingSoon from '../elements/ComingSoon';
+import Spinner from '../components/Spinner';
+import { Link } from 'react-router-dom';
 
 
 let savedTrade = ''
 export default function TradeAnalytics() {
+    const [dataLoading, setDataLoading] = useState(true)
     const { setLoading, toast, dialog } = useUI()
     const { id } = useParams();
     const { isSigned, isFirstSigned, post, getAuth, updateTrade, deleteTrade } = useAPI()
@@ -33,11 +36,11 @@ export default function TradeAnalytics() {
 
     const [data, setData] = useState({
         trade: {
-            assetType: "N/A", 
+            assetType: "N/A",
             avgBuyPrice: 0,
-            avgSellPrice: 0, 
-            breakeven: 0, 
-            charge: 0, 
+            avgSellPrice: 0,
+            breakeven: 0,
+            charge: 0,
             dateToExpiry: "N/A",
             entryDate: "N/A",
             entryPrice: 0,
@@ -47,7 +50,7 @@ export default function TradeAnalytics() {
             exitPrice: 0,
             exitTime: "N/A",
             expiryDate: "N/A",
-            id: id,
+            id: '',
             isOpen: 0,
             mistakes: [],
             netPnl: 0,
@@ -65,11 +68,11 @@ export default function TradeAnalytics() {
             tradeHistory: 0,
             tradeId: "",
             tradeType: "N/A",
+            nextTrade: '',
+            prevTrade: ''
 
         }
     })
-    
-    // const [trade, setTrade] = useState({})
     const [note, setNote] = useState('')
 
     let tabView = useRef()
@@ -136,7 +139,7 @@ export default function TradeAnalytics() {
             setData(data)
             setNote(data.trade.note)
             savedTrade = JSON.stringify(data.trade)
-            setLoading(false)
+            setDataLoading(false)
         }).catch(err => {
             if (noTradeError(err)) {
                 navigate('/no-trade-error')
@@ -199,205 +202,262 @@ export default function TradeAnalytics() {
             navigate('/settings')
             toast.info('Setup your profile', 'First you need to setup user user profile details.')
         }else if(isSigned){
+            setLoading(false)
+            setDataLoading(true)
             showData()
         }
-    }, [isSigned, isFirstSigned])
+    }, [isSigned, isFirstSigned, id])
 
-    return (
-    <div className='mt-16'>    
-        <Dialog className='h-full w-full' ref={chartsDialog} title='Charts'>
-            <div className='flex flex-col space-x-0 space-y-2 md:space-y-0 md:flex-row md:space-x-2 h-full'>
-                <TradingViewWidget symbol="NASDAQ:AAPL" theme={Themes.DARK} autosize />
-                <TradingViewWidget symbol="NASDAQ:AAPL" theme={Themes.DARK} autosize />
-            </div>
-        </Dialog>
-        <Dialog className='w-1/2' ref={noteDialog} title='Note' icon={faEdit}>
-            <textarea className='w-full h-80 bg-secondary-800 rounded-lg border-0 focus:ring-indigo-500' 
-                placeholder='Type note here...'
-                value={note}
-                onChange={(e) => setNote(e.target.value)}>
-            </textarea>
-              
-            <div className='mt-5 flex'>
-                <div className='primary-btn ml-auto' onClick={saveNote}>Save</div>
-                <div className='secondary-btn ml-2' onClick={() => noteDialog.current.hide()}>Cancel</div>
-            </div>
-        </Dialog>
-        <Card className='mt-5 lg:mt-0'>
-            <div className='md:flex md:items-center'>
-                <div className='flex items-center justify-between mb-3 md:mb-0'>
-                    <div>
-                        <div className='flex items-center'>
-                            <div className='text-lg font-bold'>{data.trade.symbol}</div>
-                                <div className={classNames('text-xs rounded px-2 mx-3', 
-                                    data.trade.tradeType == 'sell' ? 'bg-red-500/25 text-red-500' : 'bg-green-500/25 text-green-500')}>
-                                        {data.trade.tradeType == 'sell'? 'Short': 'Long'}</div>
-                        </div>
-                        <div className='text-sm text-secondary-500'>{data.trade.entryDate}</div>
-                    </div>
-                    <Icon className='bg-green-500 text-white' icon={faArrowTrendUp} boxSize='2.5rem' box/>
-                </div>
-                <div className='ml-auto flex items-center justify-between space-x-6'>
-                    <IconBtn icon={faTrash} size='lg' onClick={_deleteTrade}/>
-                    <IconBtn icon={faCircleChevronLeft} size='lg'/>
-                    <IconBtn icon={faCircleChevronRight} size='lg'/>
-                </div>
-            </div>
-        </Card>
-        <div className='lg:flex'>
-            <Card className='lg:order-2 lg:w-1/2'>
-                <div className='flex flex-col h-full'>
-                    <div className='flex items-center justify-between mb-2'>
-                        <TabBar view={tabView}>
-                            <Tab id='premium-chart' label='Premium chart' active/>
-                            <Tab id='stock-chart'label='Stock chart'/>
-                        </TabBar>
-                        <IconBtn icon={faUpRightAndDownLeftFromCenter} onClick={() => {chartsDialog.current.show()}}/>
-                    </div>
-                    <div className='grow'>
-                        <TabView ref={tabView} className='lg:!h-full w-full' style={{height: '40vh'}}>
-                            <Tab id='premium-chart'>
-                                <TradingViewWidget symbol="NASDAQ:AAPL" theme={Themes.DARK} autosize />
-                            </Tab>
-                            <Tab id='stock-chart'>
-                                <TradingViewWidget symbol="NASDAQ:AAPL" theme={Themes.DARK} autosize />
-                            </Tab>
-                        </TabView>
+    return (<>
+        <div className='p-3 h-screen overflow-y-auto mb-16 md:mb-0'>
+            {dataLoading &&
+                <div className='h-full pt-16 relative'>
+                    <div className='center'>
+                        <Spinner className='w-10 h-10 mx-auto' />
+                        <div>Loading data...</div>
                     </div>
                 </div>
-            </Card>
-            <div className='lg:w-1/2 md:flex'>
-                <Card className='md:w-1/2'>
-                    <div className='flex items-center'>
-                        <div className='text-lg font-bold'>Net P&L</div>    
-                        <div className='ml-auto font-bold'>{FORMAT.CURRENCY(data.trade.netPnl)}</div>
+            }
+            <div className={classNames('mt-16', dataLoading ? 'hidden' : '')}>    
+                <Dialog 
+                    className='h-full w-full' 
+                    ref={chartsDialog} 
+                    title='Charts'>
+                    {/* <div className='flex flex-col space-x-0 space-y-2 md:space-y-0 md:flex-row md:space-x-2 h-full'>
+                        <TradingViewWidget 
+                            symbol="NASDAQ:AAPL" 
+                            theme={Themes.DARK} 
+                            autosize />
+                        <TradingViewWidget 
+                            symbol="NASDAQ:AAPL" 
+                            theme={Themes.DARK} 
+                            autosize />
+                    </div> */}
+                </Dialog>
+                <Dialog 
+                    className='w-1/2' 
+                    ref={noteDialog} 
+                    title='Note' 
+                    icon={faEdit}>
+                    <textarea 
+                        className='w-full h-80 bg-secondary-800 rounded-lg border-0 focus:ring-indigo-500' 
+                        placeholder='Type note here...'
+                        value={note}
+                        onChange={(e) => setNote(e.target.value)}>
+                    </textarea>
+                    
+                    <div className='mt-5 flex'>
+                        <div 
+                            className='primary-btn ml-auto' 
+                            onClick={saveNote}>Save</div>
+                        <div 
+                            className='secondary-btn ml-2' 
+                            onClick={() => noteDialog.current.hide()}>Cancel</div>
                     </div>
-                    <div className='pt-5'>
-                        <div className='flex items-center mb-2'>
-                            <div>Profit target</div>
-                            <InputField type='number' className='ml-auto w-2/5' innerClassName='!py-0.5'
-                                value={data.trade.target}
-                                onChange={(v) => {
-                                    data.trade['target'] = v
-                                    setData(data)
-                                }} 
-                                onBlur={updateData}/>
-                        </div>
-                        <div className='flex items-center mb-2'>
-                            <div>Stop loss</div>
-                            <InputField type='number' className='ml-auto w-2/5' innerClassName='!py-0.5'
-                                value={data.trade.stoploss}
-                                onChange={(v) => {
-                                    data.trade['stoploss'] = v
-                                    setTrade(data)
-                                }}
-                                onBlur={updateData}/>
-                        </div>
-                        <div className='flex items-center mb-2'>
-                            <div>Volume traded</div>
-                            <div className='ml-auto'>{data.trade.quantity}</div>
-                        </div>
-                        <div className='flex items-center mb-2'>
-                            <div>Commessions & Fees</div>
-                            <div className='ml-auto'>$52.5</div>
-                        </div>
-                        <div className='flex items-center mb-2'>
-                            <div>Gross P&L</div>
-                            <div className='ml-auto'>$24,655.00</div>
-                        </div>
-                        <div className='flex items-center mb-2'>
-                            <div>Cost</div>
-                            <div className='ml-auto'>{FORMAT.CURRENCY(data.trade.entryPrice*data.trade.quantity)}</div>
-                        </div>
-                        <div className='flex items-center mb-2'>
-                            <div>Duration</div>
-                            <div className='ml-auto'>{data.trade.duration}</div>
-                        </div>
-                        <TagsField className='w-full' label='Setup' icon={faWrench} onAdd={addSetup} onRemove={removeSetup} values={data.trade.setup}/>
-                        <TagsField className='w-full' label='Mistakes' icon={faX} onAdd={addMistakes} onRemove={removeMistakes} values={data.trade.mistakes}/>
-                        <TagsField className='w-full' label='Custom Tags' icon={faTag}  onAdd={addTags} onRemove={removeTags} values={data.trade.tags}/>
-                    </div>
-                </Card>
-                <Card className='md:w-1/2'>
-                    <div className='flex items-center mb-1'>
-                        <div className='mr-5'>Average Entry Price</div>
-                        <div className='ml-auto'>{FORMAT.CURRENCY(data.trade.entryPrice, false)}</div>
-                    </div>
-                    <div className='flex items-center mb-1'>
-                        <div className='mr-5'>Average Exit Price</div>
-                            <div className='ml-auto'>{FORMAT.CURRENCY(data.trade.exitPrice, false)}</div>
-                    </div>
-                    <div className='flex items-center mb-1'>
-                        <div className='mr-5'>Trade risk</div>
-                        <div className='ml-auto'>N/A</div>
-                    </div>
-                    <div className='flex items-center mb-1'>
-                        <div className='mr-5'>Max profit</div>
-                        <div className='ml-auto'>N/A</div>
-                    </div>
-                    <div className='flex items-center mb-3'>
-                        <div className='mr-5'>Max loss</div>
-                        <div className='ml-auto'>N/A</div>
-                    </div>
-                    <div className='text-lg font-bold mb-1'>Distances</div>
-                    <div className='flex items-center mb-1'>
-                        <div className='mr-5'>Stop distance</div>
-                        <div className='ml-auto'>0.6%</div>
-                    </div>
-                    <div className='flex items-center mb-3'>
-                        <div className='mr-5'>Profit distance</div>
-                        <div className='ml-auto'>1.2%</div>
-                    </div>
-                    <div className='text-lg font-bold mb-1'>Reward to risk ratio</div>
-                    <div className='flex items-center mb-1'>
-                        <div className='mr-5'>Planned RR</div>
-                        <div className='ml-auto'>3.2R</div>
-                    </div>
-                    <div className='flex items-center'>
-                        <div className='mr-5'>Realized RR</div>
-                        <div className='ml-auto'>2.4R</div>
-                    </div>
-                </Card>
-            </div>        
-        </div>
-        <div className='lg:flex'>
-            <div className='lg:w-1/3 block md:flex lg:block'>
-                <Card className='w-full md:w-1/2 lg:w-full'>
-                    <div className='md:h-full lg:h-auto'>
-                        <div className='text-lg font-bold'>Running P&L</div>   
-                        <div className='pt-5'>
-                            <Line options={areaGraphOptions} data={areaGraphData(['09:24', '', '', '', '10:07'], [200, 800, 620, 690, 390])} />
-                        </div> 
-                    </div>
-                </Card>
-                <div className='w-full md:w-1/2 lg:w-full'>
-                    <Card className='md:h-full lg:h-auto'>
-                        <div className='flex mb-2 items-center'>
-                            <Icon className='primary-material mr-2' icon={faNoteSticky} size='sm'/>
-                            <div className='text-lg font-bold mr-auto'>Notes</div>
-                            <IconBtn 
-                                icon={data.trade.note ? faEdit : faPlus} 
-                                onClick={() => noteDialog.current.show(
-                                    data.trade.note?'Edit note':'Add note',
-                                    data.trade.note?faEdit:faPlus
-                                )}/>
-                        </div>
-                        {!data.trade.note && 
-                            <div className='text-red-500 py-5'>
-                                <Icon className='mx-auto' icon={faTriangleExclamation} />
-                                <div className='text-sm whitespace-nowrap text-center'>No note available</div>
+                </Dialog>
+                <Card className='mt-5 lg:mt-0'>
+                    <div className='md:flex md:items-center'>
+                        <div className='flex items-center justify-between mb-3 md:mb-0'>
+                            <div>
+                                <div className='flex items-center'>
+                                    <div className='text-lg font-bold'>{data.trade.symbol}</div>
+                                        <div className={classNames(
+                                            'text-xs rounded px-2 mx-3', 
+                                            data.trade.tradeType == 0? 'bg-red-500/25 text-red-500' : 'bg-green-500/25 text-green-500')}>
+                                            {data.trade.tradeType == 0? 'Short': 'Long'}
+                                        </div>
+                                </div>
+                                <div className='text-sm text-secondary-500'>{data.trade.entryDate}</div>
                             </div>
-                        }
-                        <div className='text-sm'>{data.trade.note}</div>
-                    </Card>
+                            <Icon className='bg-green-500 text-white' icon={faArrowTrendUp} boxSize='2.5rem' box/>
+                        </div>
+                        <div className='ml-auto flex items-center justify-between space-x-6'>
+                            <IconBtn icon={faReply} size='lg' onClick={() => navigate(-1)}/>
+                            <IconBtn icon={faTrash} size='lg' onClick={_deleteTrade} />
+                            {data.trade.prevTrade &&
+                                <Link to={'/trade-analytics/'+data.trade.prevTrade}>
+                                    <IconBtn icon={faCircleChevronLeft} size='lg' />
+                                </Link>
+                            }
+                            {data.trade.nextTrade &&
+                                <Link to={'/trade-analytics/'+data.trade.nextTrade}>
+                                    <IconBtn icon={faCircleChevronRight} size='lg' />
+                                </Link>
+                            }
+                            
+                        </div>
+                    </div>
+                </Card>
+                <div className='lg:flex'>
+                    <ComingSoon className='lg:order-2 lg:w-1/2'> 
+                        <Card className='w-full h-full'>
+                            <div className='flex flex-col h-full'>
+                                <div className='flex items-center justify-between mb-2'>
+                                    <TabBar view={tabView}>
+                                        <Tab id='premium-chart' label='Premium chart' active/>
+                                        <Tab id='stock-chart'label='Stock chart'/>
+                                    </TabBar>
+                                    <IconBtn 
+                                        icon={faUpRightAndDownLeftFromCenter} 
+                                        onClick={() => {chartsDialog.current.show()}}/>
+                                </div>
+                                <div className='grow'>
+                                    <TabView 
+                                        ref={tabView} 
+                                        className='lg:!h-full w-full' 
+                                        style={{height: '40vh'}}>
+                                        <Tab id='premium-chart'>
+                                            <TradingViewWidget 
+                                                symbol="NASDAQ:AAPL" 
+                                                theme={Themes.DARK} 
+                                                autosize />
+                                        </Tab>
+                                        <Tab id='stock-chart'>
+                                            <TradingViewWidget 
+                                                symbol="NASDAQ:AAPL" 
+                                                theme={Themes.DARK} 
+                                                autosize />
+                                        </Tab>
+                                    </TabView>
+                                </div>
+                            </div>
+                        </Card>
+                    </ComingSoon>
+                    <div className='lg:w-1/2 md:flex'>
+                        <Card className='md:w-1/2'>
+                            <div className='flex items-center'>
+                                <div className='text-lg font-bold'>Net P&L</div>    
+                                <div className='ml-auto font-bold'>{FORMAT.CURRENCY(data.trade.netPnl)}</div>
+                            </div>
+                            <div className='pt-5'>
+                                <div className='flex items-center mb-2'>
+                                    <div>Profit target</div>
+                                    <InputField type='number' className='ml-auto w-2/5' innerClassName='!py-0.5'
+                                        value={data.trade.target}
+                                        onChange={(v) => {
+                                            data.trade['target'] = v
+                                            setData(data)
+                                        }} 
+                                        onBlur={updateData}/>
+                                </div>
+                                <div className='flex items-center mb-2'>
+                                    <div>Stoploss</div>
+                                    <InputField type='number' className='ml-auto w-2/5' innerClassName='!py-0.5'
+                                        value={data.trade.stoploss}
+                                        onChange={(v) => {
+                                            data.trade['stoploss'] = v
+                                            setData(data)
+                                        }}
+                                        onBlur={updateData}/>
+                                </div>
+                                <div className='flex items-center mb-2'>
+                                    <div>Volume traded</div>
+                                    <div className='ml-auto'>{data.trade.quantity}</div>
+                                </div>
+                                <div className='flex items-center mb-2'>
+                                    <div>Commessions & Fees</div>
+                                    <div className='ml-auto'>$52.5</div>
+                                </div>
+                                <div className='flex items-center mb-2'>
+                                    <div>Gross P&L</div>
+                                    <div className='ml-auto'>$24,655.00</div>
+                                </div>
+                                <div className='flex items-center mb-2'>
+                                    <div>Cost</div>
+                                    <div className='ml-auto'>{FORMAT.CURRENCY(data.trade.entryPrice*data.trade.quantity)}</div>
+                                </div>
+                                <div className='flex items-center mb-2'>
+                                    <div>Duration</div>
+                                    <div className='ml-auto'>{data.trade.duration}</div>
+                                </div>
+                                <TagsField className='w-full' label='Setup' icon={faWrench} onAdd={addSetup} onRemove={removeSetup} values={data.trade.setup}/>
+                                <TagsField className='w-full' label='Mistakes' icon={faX} onAdd={addMistakes} onRemove={removeMistakes} values={data.trade.mistakes}/>
+                                <TagsField className='w-full' label='Custom Tags' icon={faTag}  onAdd={addTags} onRemove={removeTags} values={data.trade.tags}/>
+                            </div>
+                        </Card>
+                        <Card className='md:w-1/2'>
+                            <div className='flex items-center mb-1'>
+                                <div className='mr-5'>Average Entry Price</div>
+                                <div className='ml-auto'>{FORMAT.CURRENCY(data.trade.entryPrice, false)}</div>
+                            </div>
+                            <div className='flex items-center mb-1'>
+                                <div className='mr-5'>Average Exit Price</div>
+                                    <div className='ml-auto'>{FORMAT.CURRENCY(data.trade.exitPrice, false)}</div>
+                            </div>
+                            <div className='flex items-center mb-1'>
+                                <div className='mr-5'>Trade risk</div>
+                                <div className='ml-auto'>N/A</div>
+                            </div>
+                            <div className='flex items-center mb-1'>
+                                <div className='mr-5'>Max profit</div>
+                                <div className='ml-auto'>N/A</div>
+                            </div>
+                            <div className='flex items-center mb-3'>
+                                <div className='mr-5'>Max loss</div>
+                                <div className='ml-auto'>N/A</div>
+                            </div>
+                            <div className='text-lg font-bold mb-1'>Distances</div>
+                            <div className='flex items-center mb-1'>
+                                <div className='mr-5'>Stop distance</div>
+                                <div className='ml-auto'>0.6%</div>
+                            </div>
+                            <div className='flex items-center mb-3'>
+                                <div className='mr-5'>Profit distance</div>
+                                <div className='ml-auto'>1.2%</div>
+                            </div>
+                            <div className='text-lg font-bold mb-1'>Reward to risk ratio</div>
+                            <div className='flex items-center mb-1'>
+                                <div className='mr-5'>Planned RR</div>
+                                <div className='ml-auto'>3.2R</div>
+                            </div>
+                            <div className='flex items-center'>
+                                <div className='mr-5'>Realized RR</div>
+                                <div className='ml-auto'>2.4R</div>
+                            </div>
+                        </Card>
+                    </div>        
+                </div>
+                <div className='lg:flex'>
+                    <div className='lg:w-1/3 block md:flex lg:block'>
+                        <ComingSoon className='w-full md:w-1/2 lg:w-full'>
+                            <Card className='w-full'>
+                                <div className='md:h-full lg:h-auto'>
+                                    <div className='text-lg font-bold'>Running P&L</div>
+                                    <div className='pt-5'>
+                                        <Line options={areaGraphOptions} data={areaGraphData(['09:24', '', '', '', '10:07'], [200, 800, 620, 690, 390])} />
+                                    </div>
+                                </div>
+                            </Card>
+                        </ComingSoon>
+                        <div className='w-full md:w-1/2 lg:w-full'>
+                            <Card className='md:h-full lg:h-auto'>
+                                <div className='flex mb-2 items-center'>
+                                    <Icon className='primary-material mr-2' icon={faNoteSticky} size='sm'/>
+                                    <div className='text-lg font-bold mr-auto'>Notes</div>
+                                    <IconBtn 
+                                        icon={data.trade.note ? faEdit : faPlus} 
+                                        onClick={() => noteDialog.current.show(
+                                            data.trade.note?'Edit note':'Add note',
+                                            data.trade.note?faEdit:faPlus
+                                        )}/>
+                                </div>
+                                {!data.trade.note && 
+                                    <div className='text-red-500 py-5'>
+                                        <Icon className='mx-auto' icon={faTriangleExclamation} />
+                                        <div className='text-sm whitespace-nowrap text-center'>No note available</div>
+                                    </div>
+                                }
+                                <div className='text-sm'>{data.trade.note}</div>
+                            </Card>
+                        </div>
+                    </div>
+                    <ExecutionsTable
+                        headers={['si/No', 'Date', 'Time', 'Side', 'Price', 'Quantity', 'Position', 'Value', 'P&L', '', '']}
+                        adapter={executionsTableAdapter} 
+                        tradeId={id}
+                        total={data.ordersCount}/>
                 </div>
             </div>
-            <ExecutionsTable
-                headers={['si/No', 'Date', 'Time', 'Side', 'Price', 'Quantity', 'Position', 'Value', 'P&L', '', '']}
-                adapter={executionsTableAdapter} 
-                tradeId={id}
-                total={data.ordersCount}/>
         </div>
-    </div>
-  )
+    </>)
 }

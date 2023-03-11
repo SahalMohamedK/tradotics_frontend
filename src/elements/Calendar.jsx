@@ -152,7 +152,7 @@ export class Calendar extends Component {
 
     render() {
         return (
-            <div className={classNames('h-full', this.props.className)}>
+            <div className={classNames('lg:h-full h-96', this.props.className)}>
                 <div className='flex flex-col font-medium h-full'>
                     <div className='flex items-center mb-2 pb-1 border-b border-secondary-700'>
                         <SelectField innerClassName='!py-0 px-1 mr-2' value={this.state.showDate.getMonth()} values={MONTHS}

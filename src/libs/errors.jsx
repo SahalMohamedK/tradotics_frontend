@@ -3,9 +3,13 @@ export const ERROR = {
     NO_TRADE_HISTORIES: 1
 }
 
+export function badRequestError(err) {
+    return err.code == 'ERR_BAD_REQUEST'
+}
+
 export function noTradeError(err){
     try{
-        return err.code == 'ERR_BAD_REQUEST' && err.response.data.code == ERROR.NO_TRADE
+        return badRequestError(err) && err.response.data.code == ERROR.NO_TRADE
     } catch {
         return false
     }
@@ -13,7 +17,7 @@ export function noTradeError(err){
 
 export function noTradeHistoriesError(err){
     try{
-        return err.code == 'ERR_BAD_REQUEST' && err.response.data.code == ERROR.NO_TRADE_HISTORIES
+        return badRequestError(err) && err.response.data.code == ERROR.NO_TRADE_HISTORIES
     }catch{
         return False
     }

@@ -1,11 +1,11 @@
-import { faAdd, faAngleDown, faCheck, faExclamationTriangle, faInfoCircle, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faAngleDown, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { Combobox, Transition } from '@headlessui/react';
-import React, { Component, Fragment } from 'react'
-import Field from '../core/components/Field';
-import { classNames, hasValue, isEmpty, objectMap } from '../utils';
+import React, { Fragment } from 'react'
+import { classNames, isEmpty, objectMap } from '../utils';
+import FieldWraper from './FieldWraper';
 import Icon from './Icon';
 
-export class AutocompleteField extends Field {
+export class AutocompleteField extends FieldWraper {
     init(){
         super.init()
         this.defaultValue = 0

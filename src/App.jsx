@@ -37,7 +37,7 @@ function Wrapper({ children, filter = true }) {
     <Navbar filter={filter} />
     <Sidebar />
     <div className='relative md:ml-[57px]'>
-      <div className='p-3 md:h-screen overflow-y-auto mb-16 md:mb-0'>{children}</div>
+      {children}
     </div>
   </>
   )

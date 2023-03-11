@@ -1,6 +1,6 @@
 import { faLock, faUser } from '@fortawesome/free-solid-svg-icons'
 import React from 'react'
-import { useRef, useEffect } from 'react'
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Card from '../components/Card'
 import InputField from '../components/InputField'
@@ -12,6 +12,7 @@ import Button from '../components/Button'
 import Header from '../elements/Header'
 import { Form } from '../utils'
 import { networkError } from '../libs/errors'
+import GoogleLogin from 'react-google-login'
 
 export default function Signin() {
     const [isSignin, setIsSignin] = useState(false)
@@ -44,21 +45,6 @@ export default function Signin() {
         }
     }
 
-    // useEffect(() => {
-    //     setLoading(true)
-    //     if (isSigned) {
-    //         if (isFirstSigned) {
-    //             navigate('/settings')
-    //             toast.info('Setup your profile', 'First you need to setup user user profile details.')
-    //         } else {
-    //             toast.success('Welcome back!', 'You have successfully logged into Tradotics.')
-    //             navigate('/dashboard');
-    //         }
-    //     } else if (isSigned === false) {
-    //         setLoading(false)
-    //     }
-    // }, [isSigned])
-
     useEffect(() => {
         setLoading(true)
         if (isSigned && isFirstSigned) {
@@ -72,6 +58,9 @@ export default function Signin() {
         }
     }, [isSigned, isFirstSigned])
 
+    function onGoogleLoginSuccess() { }
+    function onGoogleLoginFailure() { }
+
     return (
         <div className='h-screen flex flex-col'>
             <Header />
@@ -80,8 +69,8 @@ export default function Signin() {
                     <Card className='mx-5 md:mx-0 text-center'>
                         <div className='my-5 md:mx-5'>
                             <div className='text-2xl font-bold'>Sign In</div>
-                            {/* <div className='text-sm text-secondary-500'>Don't have an account? <Link className='text-indigo-500' to='/signup'>Signup</Link></div> */}
-                            <div className='text-sm text-secondary-500'>Don't have an account? <Link className='text-indigo-500' to='/early-access'>Apply for early access</Link></div>
+                            <div className='text-sm text-secondary-500'>Don't have an account? <Link className='text-indigo-500' to='/signup'>Signup</Link></div>
+                            {/* <div className='text-sm text-secondary-500'>Don't have an account? <Link className='text-indigo-500' to='/early-access'>Apply for early access</Link></div> */}
                             <div className='text-left my-5'>
                                 <InputField ref={form.ref} className='mb-2' label='Email' icon={faUser}
                                     disabled={isSignin} onEnter={onClick} required />
@@ -90,8 +79,14 @@ export default function Signin() {
                             </div>
                             <div className='w-fit mx-auto pt-3'>
                                 <Button className='w-full primary-btn' onClick={onClick} loading={isSignin}>Signin</Button>
-                                {/* <div className='my-2 text-xs font-bold text-secondary-500'>OR</div>
-                                <button className='secondary-btn w-full'>Signin with Google</button> */}
+                                <div className='my-2 text-xs font-bold text-secondary-500'>OR</div>
+                                <GoogleLogin
+                                    className='signin-with-google-btn w-full'
+                                    clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}  // your Google app client ID
+                                    buttonText="Sign in with Google"
+                                    onSuccess={onGoogleLoginSuccess} // perform your user logic here
+                                    onFailure={onGoogleLoginFailure} // handle errors here
+                                >Signin with Google</GoogleLogin>
                             </div>
                         </div>
                     </Card>

@@ -26,12 +26,15 @@ export default function Navbar({ filter = true }) {
   return (
     <div className='backdrop-blur border-b bg-primary-900/50 border-white/10 text-white font-medium top-0 fixed w-full z-50 px-4 md:px-8 py-3'>
       <div className='items-center flex justify-between'>
-        <Link to='/dashboard'><img src={logo} alt="" width='200' /></Link>
-        {filter &&
-          <Filter className='mr-3 md:mr-0' label='Apply filter' />
-        }
         <div className='flex items-center'>
-          <IconBtn className='mr-3 md:mr-5 text-secondary-500' icon={faMoon} />
+          <Link to='/dashboard'><img src={logo} alt="" width='200' /></Link>
+          <div className='ml-2 px-2 bg-indigo-500 rounded-full text-sm'>beta</div>
+        </div>
+        {filter &&
+          <Filter className='mx-auto' label='Apply filter' />
+        }
+        <div className='flex items-center w-60'>
+          <IconBtn className='ml-auto mr-3 md:mr-5 text-secondary-500' icon={faMoon} />
           <Link className='mr-3 md:mr-5' to='/add-trades'><IconBtn className=' text-secondary-500' icon={faPlus} /></Link>
           <Menu as="div" className="relative inline-block">
             <div>

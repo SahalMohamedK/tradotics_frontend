@@ -89,20 +89,41 @@ export function hexToRgba(hex, opacity = 1) {
 
 export function equal(a, b) {
     if (typeof (a) === 'object' && typeof (b) === 'object') {
-        for (let i in a) {
-            if (a[i] !== b[i]) return false
+        if (Object.keys(a).length == Object.keys(b).length) {
+            for (let i in a) {
+                if (a[i] !== b[i]) return false
+            }
+            return true
         }
-        return true
+        return false
     }
     return a === b
+}
+
+export function nthValue(obj, n) {
+    return obj[Object.keys(obj)[n]]
+}
+
+export function nthKey(obj, n) {
+    return Object.keys(obj)[n]
 }
 
 export function removeItem(array, item) {
     return array.filter(prevItem => !equal(prevItem, item))
 }
 
+export function removeByIndex(array, index){
+    return array.filter((value, i) => i !== index)
+}
+
 export function addItem(array, item) {
     return [...array, item]
+}
+
+export function pop(object, propertyName) {
+    let temp = object[propertyName];
+    delete object[propertyName];
+    return temp;
 }
 
 export function range(start, end, step) {
@@ -137,7 +158,7 @@ export function toVar(s) {
     return varStr
 }
 
-export function round(num, digits){
+export function round(num, digits = 0){
     return Math.round(num* Math.pow(10, digits)) / Math.pow(10, digits)
 }
 
@@ -151,7 +172,7 @@ export function len(obj){
 }
 
 export function safeNumber(n, otherwise=0){
-    if(isNaN(n)){
+    if(isNaN(n) || n == Infinity){
         return otherwise
     }
     return n
@@ -215,6 +236,33 @@ export function mergeCumulativeDatas(data1, data2){
     return [labels, values1, values2]
 }
 
+export function all(obj, func = (a, b) => a){
+    for(var i in obj){
+        if (!func(obj[i], i)){
+            return false
+        }
+    }
+    return isEmpty(obj) ? false : true
+}
+
+export function any(obj, func = (a, b) => a) {
+    for (var i in obj) {
+        if (func(obj[i], i)) {
+            return true
+        }
+    }
+    return false
+}
+
+export function lge(a,b, r1, r2, r3){
+    if(a==b){
+        return r3
+    }else if(a>b){
+        return r1
+    }
+    return r2
+}
+
 export class Form {
     constructor() {
         this.fields = {}
@@ -231,10 +279,11 @@ export class Form {
         }
     }
 
-    isValid() {
+    isValid(keys = undefined) {
         let valid = true
-        for (var key in this.fields) {
-            if (this.fields[key].get() === undefined) {
+        keys = hasValue(keys, Object.keys(this.fields))
+        for (var key in keys) {
+            if (this.fields[keys[key]].get() === undefined) {
                 valid = false
             }
         }
@@ -243,17 +292,17 @@ export class Form {
 
     get(pure = false, keys = undefined) {
         keys = hasValue(keys, Object.keys(this.fields))
-        if(pure){
+        if (pure) {
             let data = {}
             for (var key in keys) {
                 let field = this.fields[keys[key]]
                 let value
-                if (field instanceof Form){
+                if (field instanceof Form) {
                     value = field.get(pure)
-                }else{
+                } else {
                     value = field.get()
                 }
-                if (value) {
+                if (value != undefined) {
                     data[keys[key]] = value
                 }
             }
@@ -295,8 +344,12 @@ export class Form {
         }
     }
 
-    sub(key, form){
+    sub(key, form) {
         this.fields[key] = form
+    }
+
+    contains(key) {
+        return this.fields[key] !== undefined
     }
 }
 

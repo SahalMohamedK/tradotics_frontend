@@ -59,10 +59,16 @@ export class Table extends Component {
                     </thead>
                     <tbody >
                         {!this.state.loading && this.state.data.map((items, i) =>
-                            <tr key={i} className={classNames('duration-200 bg-secondary-800 h-0 text-xs text-center', this.props.onClick ? 'hover:bg-secondary-700 cursor-pointer' : '')}
+                            <tr 
+                                key={i} 
+                                className={classNames(
+                                    'duration-200 bg-secondary-800 h-0 text-xs text-center', 
+                                    this.props.onClick ? 'hover:bg-secondary-700 cursor-pointer' : '')}
                                 onClick={() => this.onClick(items)}>
                                 {this.adapter(this, ...items).map((item, j) =>
-                                    <td key={j} className="p-2 first:pl-3 first:rounded-l-lg last:pl-2 last:rounded-r-lg">{item}</td>
+                                    <td 
+                                        key={j} 
+                                        className="p-2 first:pl-3 first:rounded-l-lg last:pl-2 last:rounded-r-lg">{item}</td>
                                 )}
                             </tr>
                         )}

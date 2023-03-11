@@ -1,6 +1,6 @@
 import { faDownload, faEdit, faPenToSquare, faPersonWalkingArrowRight, faSliders, faTrash } from "@fortawesome/free-solid-svg-icons";
 import IconBtn from "../components/IconBtn";
-import { classNames, round} from "../utils";
+import { classNames, hasValue, round} from "../utils";
 import RatioBar from "../components/RatioBar";
 import SwitchBtn from "../components/SwitchBtn";
 
@@ -18,7 +18,7 @@ function iconBtn(icon, onClick){
 }
 
 function dual(data, positive, negative){
-    return <div className={classNames('text-xs font-bold rounded py-0.5', data?'bg-green-500/25 text-green-500':'bg-red-500/25 text-red-500')}>
+    return <div className={classNames('text-xs font-bold rounded py-0.5 px-1', data?'bg-green-500/25 text-green-500':'bg-red-500/25 text-red-500')}>
             {data?positive:negative}
         </div>
 }
@@ -44,8 +44,17 @@ function dateTime(d){
 
 export var simpleTableAdapter = (table, ...items) => items
 
-export function addTradeHistoryTableAdapter(table, brocker, portfolio, type, created, executions, trades, id ){
-    return [brocker, portfolio, ['Import', 'Sync', 'manula'][type], dateTime(created), executions, trades, iconBtn(faDownload, () => table.props.onDownload(id)), iconBtn(faTrash, () => table.props.onDelete(id))]
+export function addTradeHistoryTableAdapter(table, data){
+    return [
+        data.brocker ? data.brocker.name: '-', 
+        data.portfolio ? data.portfolio.name: '-', 
+        ['Import', 'Sync', 'Manual'][data.type], 
+        dateTime(data.created), 
+        data.no_executions, 
+        data.no_trades, 
+        iconBtn(faDownload, () => table.props.onDownload(data.pk)), 
+        iconBtn(faTrash, () => table.props.onDelete(data.pk))
+    ]
 }
 
 export function dashboardTableAdapter(table, n, trade){
@@ -56,7 +65,7 @@ export function dashboardTableAdapter(table, n, trade){
         trade.symbol, 
         currency(trade.netPnl), 
         percentage(trade.roi), 
-        dual(trade.tradeType == 'buy', 'Long', 'Short'), 
+        dual(trade.tradeType, 'Long', 'Short'), 
         trade.quantity, 
         trade.entryTime, 
         currency(trade.entryPrice, false), 
@@ -99,7 +108,7 @@ export function journalDialogTableAdapter(table, trade){
         trade.entryTime, 
         trade.exitTime, 
         trade.symbol, 
-        dual(trade.tradeType == 'buy', 'Long', 'Short'), 
+        dual(trade.tradeType, 'Long', 'Short'), 
         trade.quantity, 
         currency(trade.netPnl), 
         percentage(trade.roi), 
@@ -163,8 +172,9 @@ export function portfolioSettingsTableAdapter(table, portfolio){
         currency(portfolio.value), 
         percentage(0), 
         0, 
-        currency(0), 
-        iconBtn(faSliders, () => table.props.adjustmentsDialog.current.show()), 
+        currency(portfolio.lastValue), 
+        iconBtn(faSliders, () => table.props.onAdjustment(portfolio)), 
+        iconBtn(faEdit, () => table.props.onEdit(portfolio)),
         iconBtn(faTrash, () => table.props.onDelete(portfolio))]
 }
 
@@ -187,8 +197,14 @@ export function commissionSettingsTableAdapter(table, brocker, segment){
         ]
 }
 
-export function adjustmentsDialogTableAdapter(table, ...items){
-    return [...items, iconBtn(faTrash)]
+export function adjustmentsDialogTableAdapter(table, entry){
+    return [
+        ['Deposit'][entry.type],
+        entry.value,
+        dateTime(entry.date),
+        entry.desc,
+        iconBtn(faTrash)
+    ]
 }
 
 export function instituteSettingsTableAdapter(table, institute, group){
